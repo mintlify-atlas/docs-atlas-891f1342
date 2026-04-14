@@ -1,0 +1,146 @@
+---
+title: "Read and inspect Graph API responses in Graph Explorer"
+description: "Read HTTP status codes, response times, formatted JSON bodies, and response headers from any Microsoft Graph API call you run in Graph Explorer."
+---
+
+After you run a query in Graph Explorer, the response viewer displays everything returned by the Microsoft Graph API: the HTTP status code, response time, the JSON body, and the response headers. The viewer formats and syntax-highlights the response automatically, making it easy to read even deeply nested payloads.
+
+## What the response viewer shows
+
+The response pane is split into two tabs: **Response preview** and **Response headers**. Between them they expose the full result of your API call.
+
+<Columns cols={2}>
+  <Card title="Status code" icon="circle-info">
+    Displayed prominently above the response body. Indicates whether the request succeeded or failed.
+  </Card>
+  <Card title="Response time" icon="clock">
+    Shows how long the API took to respond, in milliseconds. Useful for understanding latency.
+  </Card>
+  <Card title="Response body" icon="file-code">
+    The JSON payload returned by Graph, formatted and syntax-highlighted for readability.
+  </Card>
+  <Card title="Response headers" icon="list">
+    HTTP headers returned by the server, accessible from the Response headers tab.
+  </Card>
+</Columns>
+
+## Response preview tab
+
+The **Response preview** tab displays the JSON body returned by the API. Graph Explorer automatically formats and indents the JSON so you can read the structure without additional tools.
+
+A typical response for `GET https://graph.microsoft.com/v1.0/me` looks like this:
+
+```json
+{
+  "id": "87d349ed-44d7-43e1-9a83-5f2406dee5bd",
+  "displayName": "Megan Bowen",
+  "givenName": "Megan",
+  "surname": "Bowen",
+  "mail": "MeganB@contoso.com",
+  "jobTitle": "Marketing Manager",
+  "officeLocation": "12/1110",
+  "userPrincipalName": "MeganB@contoso.com"
+}
+```
+
+### Syntax highlighting
+
+Properties, string values, numbers, booleans, and null values are each rendered in a distinct color. This makes it faster to scan a large response and spot the fields you care about.
+
+### Copy response body
+
+To copy the entire response body, click the **Copy** icon in the top-right corner of the response pane. The JSON is copied to your clipboard as-is, preserving formatting.
+
+## Response headers tab
+
+Click the **Response headers** tab to view the HTTP headers returned with the response. Common Graph API response headers include:
+
+| Header | Description |
+|--------|-------------|
+| `Content-Type` | The media type of the response body, usually `application/json` |
+| `request-id` | A unique identifier for the request — include this when filing support issues |
+| `client-request-id` | The client-generated request ID echoed back by the server |
+| `OData-Version` | The OData protocol version used by the response |
+| `Cache-Control` | Caching directives for the response |
+
+<Tip>
+  If a request fails unexpectedly, copy the `request-id` value from the response headers. Microsoft support teams use this ID to look up server-side logs for your specific request.
+</Tip>
+
+## HTTP status codes in Graph Explorer context
+
+Graph Explorer displays the status code returned by Microsoft Graph. Here are the codes you will see most often and what they mean:
+
+<AccordionGroup>
+  <Accordion title="200 OK">
+    The request succeeded and the response body contains the requested data. This is the expected result for most GET requests.
+  </Accordion>
+  <Accordion title="201 Created">
+    A new resource was created successfully. Returned by POST requests that create entities, such as creating a calendar event.
+  </Accordion>
+  <Accordion title="204 No Content">
+    The request succeeded but there is no body to return. Common for DELETE requests and some PATCH operations.
+  </Accordion>
+  <Accordion title="400 Bad Request">
+    The request was malformed — often a JSON syntax error in the request body or an invalid query parameter. Review your request body in the editor and check the error message in the response.
+  </Accordion>
+  <Accordion title="401 Unauthorized">
+    The request lacks valid authentication credentials. This usually means your session has expired. Sign out and sign back in to refresh your token.
+  </Accordion>
+  <Accordion title="403 Forbidden">
+    You are authenticated, but your account has not consented to the permissions required for this request. Go to the [Modify permissions](/features/permissions) tab to consent to the required scope and then rerun the query.
+  </Accordion>
+  <Accordion title="404 Not Found">
+    The resource specified in the URL does not exist, or your account does not have access to it. Verify that the ID or path in the URL is correct.
+  </Accordion>
+  <Accordion title="429 Too Many Requests">
+    Graph has throttled your requests. Wait for the number of seconds indicated in the `Retry-After` response header, then try again.
+  </Accordion>
+  <Accordion title="500 Internal Server Error">
+    An unexpected error occurred on the Graph API side. Retry the request. If the error persists, note the `request-id` header and contact Microsoft support.
+  </Accordion>
+</AccordionGroup>
+
+## Adaptive Cards rendering
+
+When a Graph API response payload includes content that can be rendered as an Adaptive Card — for example, certain Teams messaging extension payloads or Viva Connections cards — Graph Explorer detects this and offers a rendered card view alongside the raw JSON.
+
+<Note>
+  Adaptive Cards rendering is triggered when the response contains a card schema payload. Not all Graph API responses produce a card. See [Adaptive Cards in Graph Explorer](/advanced/adaptive-cards) for a full walkthrough.
+</Note>
+
+When an Adaptive Card is detected, a **Card** tab appears next to the **Response preview** tab. Click it to see a visual rendering of the card as it would appear in Microsoft Teams or Outlook.
+
+## Switching between response tabs
+
+<Steps>
+  <Step title="Run a query">
+    Execute any query using the **Run query** button or `Ctrl + Enter` / `Cmd + Enter`.
+  </Step>
+  <Step title="Read the response body">
+    The **Response preview** tab is selected by default. Review the formatted JSON here.
+  </Step>
+  <Step title="Check response headers">
+    Click the **Response headers** tab to inspect the HTTP headers returned by the API.
+  </Step>
+  <Step title="View Adaptive Card (if available)">
+    If a **Card** tab appears, click it to see the visual card rendering.
+  </Step>
+</Steps>
+
+## Related pages
+
+<Columns cols={2}>
+  <Card title="Build and run queries" icon="terminal" href="/features/query-editor">
+    Learn how to construct requests in the query editor before reading their responses.
+  </Card>
+  <Card title="Manage permissions" icon="shield-halved" href="/features/permissions">
+    Resolve 403 errors by consenting to the required Graph API scopes.
+  </Card>
+  <Card title="Error handling" icon="triangle-exclamation" href="/api/error-handling">
+    Understand Microsoft Graph error response formats and common error codes.
+  </Card>
+  <Card title="Adaptive Cards" icon="rectangle-history" href="/advanced/adaptive-cards">
+    Learn how Graph Explorer renders Adaptive Card payloads.
+  </Card>
+</Columns>

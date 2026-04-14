@@ -1,0 +1,139 @@
+---
+title: "Browse and run sample Graph API queries in Graph Explorer"
+description: "Browse and run a curated library of Microsoft Graph API examples covering users, mail, calendar, files, Groups, and Teams — no setup required."
+---
+
+Sample queries are pre-built Microsoft Graph API requests curated by Microsoft to help you explore common scenarios without writing a URL from scratch. Each sample loads directly into the query editor, so you can run it immediately or customize it for your own needs.
+
+## What sample queries cover
+
+The sample library spans the core workloads of Microsoft Graph, organized into categories:
+
+<AccordionGroup>
+  <Accordion title="User profile">
+    Queries for reading and updating user profile data, including display name, job title, manager, and direct reports.
+
+    Example: `GET https://graph.microsoft.com/v1.0/me`
+  </Accordion>
+  <Accordion title="Mail">
+    Queries for listing messages, reading a specific message, sending mail, replying, and managing mail folders.
+
+    Example: `GET https://graph.microsoft.com/v1.0/me/messages`
+  </Accordion>
+  <Accordion title="Calendar">
+    Queries for listing events, creating calendar entries, checking free/busy status, and working with calendar views.
+
+    Example: `GET https://graph.microsoft.com/v1.0/me/events`
+  </Accordion>
+  <Accordion title="Files (OneDrive)">
+    Queries for listing drives, browsing files, downloading items, and uploading content via the Drive API.
+
+    Example: `GET https://graph.microsoft.com/v1.0/me/drive/root/children`
+  </Accordion>
+  <Accordion title="Groups">
+    Queries for listing groups, reading group membership, and working with Microsoft 365 Groups.
+
+    Example: `GET https://graph.microsoft.com/v1.0/groups`
+  </Accordion>
+  <Accordion title="Microsoft Teams">
+    Queries for listing joined teams, channels, messages, and tabs using the Teams API.
+
+    Example: `GET https://graph.microsoft.com/v1.0/me/joinedTeams`
+  </Accordion>
+  <Accordion title="Applications and service principals">
+    Queries for listing app registrations, service principals, and OAuth2 permission grants.
+  </Accordion>
+</AccordionGroup>
+
+## Browse the sample library
+
+The sample query panel appears on the left side of Graph Explorer. To browse it:
+
+<Steps>
+  <Step title="Open the Sample queries panel">
+    Click **Sample queries** in the left sidebar if it is not already visible.
+  </Step>
+  <Step title="Browse by category">
+    Samples are grouped into expandable categories. Click a category name to expand it and see the available queries.
+  </Step>
+  <Step title="Search for a specific sample">
+    Use the search field at the top of the panel to filter samples by keyword. For example, type `sendMail` to find mail-sending samples, or `joinedTeams` to find Teams queries.
+  </Step>
+</Steps>
+
+<Tip>
+  Searching by resource name (for example, `calendar`, `drive`, `user`) is often faster than browsing categories when you know the workload you want to explore.
+</Tip>
+
+## Load and run a sample query
+
+<Steps>
+  <Step title="Click the sample">
+    Click any sample query in the list. Graph Explorer loads the HTTP method, URL, and (if applicable) the request body into the query editor.
+  </Step>
+  <Step title="Review the pre-filled query">
+    Check the URL and request body before running. Some samples include placeholder values — for example, a specific user ID or item ID — that you should replace with real values from your tenant.
+  </Step>
+  <Step title="Run the query">
+    Click **Run query** or press `Ctrl + Enter` / `Cmd + Enter` to execute the request.
+  </Step>
+  <Step title="Inspect the response">
+    The response body, status code, and headers appear in the response pane. See [Inspect API responses](/features/response-viewer) for more on reading results.
+  </Step>
+</Steps>
+
+## v1.0 vs beta samples
+
+Many samples are available in both stable and preview versions. Use the version toggle at the top of the query editor to switch between them.
+
+<Tabs>
+  <Tab title="v1.0 samples">
+    v1.0 samples use endpoints that are generally available and stable. These are the right starting point for most scenarios.
+
+    ```http
+    GET https://graph.microsoft.com/v1.0/me/messages
+    ```
+  </Tab>
+  <Tab title="Beta samples">
+    Beta samples demonstrate newer capabilities that are still in preview. The request URL uses the `beta` prefix.
+
+    ```http
+    GET https://graph.microsoft.com/beta/me/messages
+    ```
+
+    <Warning>
+      Beta endpoints may change or be removed without notice. Do not use them in production applications.
+    </Warning>
+  </Tab>
+</Tabs>
+
+## The demo account for anonymous users
+
+If you have not signed in, Graph Explorer runs all queries against a read-only demo account maintained by Microsoft. This lets you try the tool — including sample queries — without a Microsoft account.
+
+<Note>
+  The demo account provides realistic but static sample data. POST, PATCH, PUT, and DELETE requests made while unauthenticated do not modify any real data, but the responses may simulate success to illustrate how the API works.
+</Note>
+
+The demo account covers a broad set of scenarios, including profile data, mail, calendar, files, and Teams. To use your own real tenant data, [sign in with your Microsoft account](/authentication).
+
+<Info>
+  Running a sample query with the demo account is a great way to understand the response structure before writing application code.
+</Info>
+
+## Related pages
+
+<Columns cols={2}>
+  <Card title="Build and run queries" icon="terminal" href="/features/query-editor">
+    Learn how to use the query editor to build your own custom requests.
+  </Card>
+  <Card title="Request history" icon="clock" href="/features/history">
+    Review and replay the queries you have run in the current session.
+  </Card>
+  <Card title="Common queries reference" icon="code" href="/api/common-queries">
+    A curated list of frequently used Graph API calls with explanations.
+  </Card>
+  <Card title="Authentication" icon="lock" href="/authentication">
+    Sign in to run sample queries against your own Microsoft 365 data.
+  </Card>
+</Columns>

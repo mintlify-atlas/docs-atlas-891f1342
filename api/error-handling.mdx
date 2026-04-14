@@ -1,0 +1,209 @@
+---
+title: "Understand and fix errors from the Microsoft Graph API"
+description: "Learn how to read Microsoft Graph API error responses, interpret common HTTP status codes, and resolve the most frequent errors in Graph Explorer."
+---
+
+When a Microsoft Graph API request fails, the API returns an HTTP error status code and a JSON response body that describes what went wrong. Understanding how to read these responses is essential for debugging your queries in Graph Explorer. Most errors are caused by a small set of common issues — missing permissions, an invalid token, or a malformed query — all of which are straightforward to fix.
+
+## Error response format
+
+All Microsoft Graph error responses follow the same JSON structure, with an `error` object at the top level:
+
+```json
+{
+  "error": {
+    "code": "Authorization_RequestDenied",
+    "message": "Insufficient privileges to complete the operation.",
+    "innerError": {
+      "request-id": "a8e4b4e1-7f3d-4b2a-9c1e-5d2f3a4b5c6d",
+      "date": "2024-11-14T10:30:00",
+      "client-request-id": "a8e4b4e1-7f3d-4b2a-9c1e-5d2f3a4b5c6d"
+    }
+  }
+}
+```
+
+- **`code`**: A machine-readable string identifying the specific error type.
+- **`message`**: A human-readable description of what went wrong.
+- **`innerError`**: Optional additional detail, including a `request-id` you can provide to Microsoft support when reporting an issue.
+
+## Common HTTP error codes
+
+<AccordionGroup>
+  <Accordion title="400 Bad Request — malformed query or invalid request body">
+    The request was syntactically invalid. This happens when:
+
+    - An OData query parameter has incorrect syntax (for example, `$filter=isRead = false` instead of `$filter=isRead eq false`)
+    - A required property is missing from the request body
+    - A property value is the wrong type
+
+    **Example error code**: `Request_BadRequest`, `InvalidValue`
+
+    ```json
+    {
+      "error": {
+        "code": "Request_BadRequest",
+        "message": "Invalid value specified for property 'startDateTime'."
+      }
+    }
+    ```
+
+    **Fix**: Check the Graph Explorer request body and query parameters for typos or incorrect syntax. Compare against the [common queries reference](/api/common-queries) to verify the correct format.
+  </Accordion>
+
+  <Accordion title="401 Unauthorized — missing or invalid access token">
+    The request did not include a valid access token, or the token has expired.
+
+    **Example error code**: `InvalidAuthenticationToken`
+
+    ```json
+    {
+      "error": {
+        "code": "InvalidAuthenticationToken",
+        "message": "Access token is empty.",
+        "innerError": {
+          "request-id": "...",
+          "date": "..."
+        }
+      }
+    }
+    ```
+
+    **Fix**: Sign in to Graph Explorer. Click **Sign in to Graph Explorer** in the top right. If you are already signed in and still getting 401, your token may have expired — sign out and sign back in to refresh it.
+  </Accordion>
+
+  <Accordion title="403 Forbidden — insufficient permissions or scopes">
+    The request is authenticated, but the access token does not include the permissions required to perform the operation.
+
+    **Example error code**: `Authorization_RequestDenied`
+
+    ```json
+    {
+      "error": {
+        "code": "Authorization_RequestDenied",
+        "message": "Insufficient privileges to complete the operation.",
+        "innerError": {
+          "request-id": "...",
+          "date": "..."
+        }
+      }
+    }
+    ```
+
+    **Fix**: Open the **Modify permissions** tab in Graph Explorer, find the required permission for the endpoint you're calling, and click **Consent**. For example, `GET /me/messages` requires `Mail.Read`. After consenting, re-run your query.
+
+    <Tip>
+      The **Modify permissions** tab shows which permissions are required for the current query. Enable the ones marked as needed and consent to them before running the request again.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="404 Not Found — resource doesn't exist">
+    The resource you requested does not exist, or you don't have visibility into it.
+
+    **Example error code**: `Request_ResourceNotFound`
+
+    ```json
+    {
+      "error": {
+        "code": "Request_ResourceNotFound",
+        "message": "Resource '48d31887-5fad-4d73-a9f5-3c356e68a038' does not exist or one of its queried reference-property navigation properties is not present."
+      }
+    }
+    ```
+
+    **Fix**: Verify that the ID or path in your URL is correct. Object IDs in Microsoft Graph are GUIDs — double-check that you haven't truncated or mistyped the value. If you're using `/me`, make sure you are signed in.
+  </Accordion>
+
+  <Accordion title="429 Too Many Requests — throttling">
+    Your application (or Graph Explorer session) has sent too many requests in a short period and has been throttled by Microsoft Graph.
+
+    **Example error code**: `TooManyRequests`
+
+    ```json
+    {
+      "error": {
+        "code": "TooManyRequests",
+        "message": "Too many requests, please try again later."
+      }
+    }
+    ```
+
+    The response includes a `Retry-After` header that tells you how many seconds to wait before sending another request:
+
+    ```http
+    HTTP/1.1 429 Too Many Requests
+    Retry-After: 30
+    ```
+
+    **Fix**: Wait the number of seconds specified in the `Retry-After` header before retrying. In Graph Explorer, this usually resolves itself — wait a moment and re-run the query. In application code, implement exponential backoff and respect the `Retry-After` value.
+  </Accordion>
+
+  <Accordion title="500 Internal Server Error — Graph service error">
+    An unexpected error occurred on Microsoft's servers. This is not caused by anything you did wrong.
+
+    **Example error code**: `Service_InternalServerError`
+
+    ```json
+    {
+      "error": {
+        "code": "Service_InternalServerError",
+        "message": "Encountered an internal server error. Please retry the request."
+      }
+    }
+    ```
+
+    **Fix**: Retry the request after a short delay. If the error persists, note the `request-id` from the `innerError` object and check the [Microsoft 365 Service Health dashboard](https://admin.microsoft.com/adminportal/home#/servicehealth) for any active incidents.
+  </Accordion>
+</AccordionGroup>
+
+## How to read errors in Graph Explorer
+
+Graph Explorer's response viewer makes it easy to inspect error details without leaving the tool.
+
+<Steps>
+  <Step title="Run the query">
+    Enter your endpoint in the query bar and click **Run query**.
+  </Step>
+  <Step title="Check the response status code">
+    The response panel shows the HTTP status code prominently at the top of the response. A non-2xx status code indicates an error.
+  </Step>
+  <Step title="Read the response body">
+    Switch to the **Response body** tab in the response viewer. The JSON error object appears here, including the `code` and `message` fields that describe the issue.
+  </Step>
+  <Step title="Check response headers">
+    For 429 errors, switch to the **Response headers** tab and look for the `Retry-After` header. This tells you exactly how long to wait before retrying.
+  </Step>
+</Steps>
+
+## Fixing the most common errors
+
+<CardGroup cols={2}>
+  <Card title="Fix 401 errors" icon="key" href="/authentication">
+    Sign in to Graph Explorer to get a valid access token automatically attached to your requests.
+  </Card>
+  <Card title="Fix 403 errors" icon="shield" href="/features/permissions">
+    Use the Modify permissions tab to consent to the scopes your query requires.
+  </Card>
+  <Card title="Fix 400 errors" icon="code" href="/api/common-queries">
+    Check your query syntax against known-good examples for common endpoints.
+  </Card>
+  <Card title="Explore the response viewer" icon="eye" href="/features/response-viewer">
+    Learn how to navigate response headers, body, and status codes in Graph Explorer.
+  </Card>
+</CardGroup>
+
+## Throttling and Graph Explorer
+
+Microsoft Graph applies throttling limits per user, per app, and per tenant. When you're using Graph Explorer interactively, you're unlikely to hit throttling limits through normal exploration. However, if you run the same query repeatedly in quick succession — for example, when testing pagination logic — you may trigger a 429 response.
+
+<Note>
+  Graph Explorer runs all requests under your signed-in account and the Graph Explorer application registration. Throttling in Graph Explorer does not affect your own application's throttling limits — they are tracked separately by application ID.
+</Note>
+
+When a 429 occurs in Graph Explorer:
+
+1. Look at the `Retry-After` header value in the **Response headers** tab.
+2. Wait the specified number of seconds.
+3. Re-run your query.
+
+For high-volume scenarios in application code, implement [Microsoft's recommended throttling handling pattern](https://learn.microsoft.com/en-us/graph/throttling): catch 429 responses, read the `Retry-After` header, and use exponential backoff.

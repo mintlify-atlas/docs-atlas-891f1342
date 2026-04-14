@@ -1,26 +1,11 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
-  "name": "Graph Explorer",
+  "projectType": "saas",
+  "projectName": "Graph Explorer",
+  "projectDescription": "A browser-based interactive tool that lets developers explore, test, and learn the Microsoft Graph API by executing queries and viewing responses in real time.",
   "theme": "luma",
-  "colors": {
-    "primary": "#646464"
-  },
-  "favicon": "https://icons.duckduckgo.com/ip3/developer.microsoft.com.ico",
-  "logo": {
-    "light": "https://media.brand.dev/694a6bfe-0bb7-4772-898b-39f0a52d0a2a.png",
-    "dark": "https://media.brand.dev/694a6bfe-0bb7-4772-898b-39f0a52d0a2a.png"
-  },
-  "navbar": {
-    "primary": {
-      "type": "github",
-      "href": "https://github.com/giancarlo1972/Graph-Explorer"
-    }
-  },
-  "footer": {
-    "socials": {
-      "github": "https://github.com/giancarlo1972/Graph-Explorer"
-    }
-  },
+  "primaryColor": "#646464",
+  "lightColor": null,
+  "darkColor": null,
   "navigation": {
     "tabs": [
       {
@@ -79,5 +64,28 @@
         ]
       }
     ]
-  }
+  },
+  "keyFeatures": [
+    "Interactive Microsoft Graph API query editor with syntax highlighting",
+    "Sample queries library covering common API scenarios",
+    "OAuth 2.0 authentication with Microsoft account sign-in",
+    "Request history tracking and replay",
+    "Response viewer with JSON formatting and Adaptive Cards rendering",
+    "Granular permission consent management",
+    "Support for beta and v1.0 API endpoints",
+    "Postman collection export for offline use",
+    "Sovereign cloud support (GCC, DoD, China)"
+  ],
+  "publicApiSurface": [
+    "GET /me",
+    "GET /me/messages",
+    "GET /me/events",
+    "GET /me/drive/root/children",
+    "GET /users",
+    "GET /groups",
+    "POST /me/sendMail",
+    "PATCH /me",
+    "GET /me/memberOf",
+    "GET /me/photo/$value"
+  ]
 }

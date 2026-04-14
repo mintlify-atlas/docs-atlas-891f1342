@@ -1,0 +1,266 @@
+---
+title: "Users, /me, and profile endpoints — Microsoft Graph API"
+description: "Explore the /me and /users endpoints in Microsoft Graph. Read and update user profiles, photos, and group memberships using User.Read or User.Read.All."
+---
+
+The `/me` and `/users` endpoints are among the most commonly used resources in Microsoft Graph. They give you access to user profile data, group memberships, profile photos, and more — whether you're reading your own profile or querying users across a tenant.
+
+<Info>
+  All requests require a valid access token. Delegated permissions are used for `/me` endpoints. Application permissions are required when accessing `/users` without a signed-in user context.
+</Info>
+
+## Endpoints
+
+### GET /me
+
+Returns the profile of the currently signed-in user.
+
+```http
+GET https://graph.microsoft.com/v1.0/me
+```
+
+**Required permission:** `User.Read`
+
+<ResponseField name="id" type="string" required>
+  The unique identifier for the user.
+</ResponseField>
+<ResponseField name="displayName" type="string">
+  The user's full display name.
+</ResponseField>
+<ResponseField name="mail" type="string">
+  The user's primary email address.
+</ResponseField>
+<ResponseField name="jobTitle" type="string">
+  The user's job title.
+</ResponseField>
+<ResponseField name="department" type="string">
+  The department the user belongs to.
+</ResponseField>
+<ResponseField name="userPrincipalName" type="string">
+  The user's UPN, which acts as their login name.
+</ResponseField>
+
+**Example response:**
+
+```json
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users/$entity",
+  "id": "48d31887-5fad-4d73-a9f5-3c356e68a038",
+  "displayName": "Megan Bowen",
+  "mail": "MeganB@M365x214355.onmicrosoft.com",
+  "jobTitle": "Auditor",
+  "department": "Finance",
+  "userPrincipalName": "MeganB@M365x214355.onmicrosoft.com"
+}
+```
+
+---
+
+### GET /me with $select
+
+Use the `$select` query parameter to retrieve only the fields you need, reducing response payload size.
+
+```http
+GET https://graph.microsoft.com/v1.0/me?$select=displayName,mail,jobTitle,department
+```
+
+**Required permission:** `User.Read`
+
+<ParamField query="$select" type="string">
+  Comma-separated list of properties to include in the response. Reduces payload size by returning only the specified fields.
+</ParamField>
+
+**Example response:**
+
+```json
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users(displayName,mail,jobTitle,department)/$entity",
+  "displayName": "Megan Bowen",
+  "mail": "MeganB@M365x214355.onmicrosoft.com",
+  "jobTitle": "Auditor",
+  "department": "Finance"
+}
+```
+
+---
+
+### GET /users
+
+Lists all users in the tenant. This endpoint requires elevated permissions and is typically used in admin or reporting scenarios.
+
+```http
+GET https://graph.microsoft.com/v1.0/users
+```
+
+**Required permission:** `User.Read.All` (delegated) or `User.Read.All` (application)
+
+<ParamField query="$select" type="string">
+  Return only specified properties for each user.
+</ParamField>
+
+<ParamField query="$filter" type="string">
+  Filter users by property values. Example: `$filter=department eq 'Finance'`
+</ParamField>
+
+<ParamField query="$top" type="number" default="100">
+  Maximum number of users to return per page. Accepted values: 1–999.
+</ParamField>
+
+<Warning>
+  Listing all users in large tenants can return thousands of records. Use `$top` and `@odata.nextLink` for pagination to avoid timeouts.
+</Warning>
+
+**Example response:**
+
+```json
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users",
+  "value": [
+    {
+      "id": "48d31887-5fad-4d73-a9f5-3c356e68a038",
+      "displayName": "Megan Bowen",
+      "mail": "MeganB@M365x214355.onmicrosoft.com",
+      "userPrincipalName": "MeganB@M365x214355.onmicrosoft.com"
+    },
+    {
+      "id": "e8a02cc7-face-4ae6-b3e9-c2b09f5d3f32",
+      "displayName": "Alex Wilber",
+      "mail": "AlexW@M365x214355.onmicrosoft.com",
+      "userPrincipalName": "AlexW@M365x214355.onmicrosoft.com"
+    }
+  ]
+}
+```
+
+---
+
+### GET /users/{id}
+
+Returns a specific user by their object ID or user principal name (UPN).
+
+```http
+GET https://graph.microsoft.com/v1.0/users/{id}
+```
+
+**Required permission:** `User.Read.All`
+
+<ParamField path="id" type="string" required>
+  The user's object ID (GUID) or user principal name (e.g., `user@contoso.com`).
+</ParamField>
+
+**Example response:**
+
+```json
+{
+  "id": "48d31887-5fad-4d73-a9f5-3c356e68a038",
+  "displayName": "Megan Bowen",
+  "mail": "MeganB@M365x214355.onmicrosoft.com",
+  "jobTitle": "Auditor",
+  "department": "Finance",
+  "officeLocation": "18/2111",
+  "mobilePhone": null,
+  "userPrincipalName": "MeganB@M365x214355.onmicrosoft.com"
+}
+```
+
+---
+
+### PATCH /me
+
+Updates one or more writable properties on the signed-in user's profile.
+
+```http
+PATCH https://graph.microsoft.com/v1.0/me
+```
+
+**Required permission:** `User.ReadWrite`
+
+**Example request body:**
+
+```json
+{
+  "jobTitle": "Senior Auditor",
+  "department": "Finance",
+  "mobilePhone": "+1 555 123 4567"
+}
+```
+
+<Note>
+  A successful PATCH returns `204 No Content` with an empty body. Only include the properties you want to update — omitted properties are not changed.
+</Note>
+
+**Writable properties include:** `displayName`, `jobTitle`, `department`, `mobilePhone`, `officeLocation`, `city`, `country`, `postalCode`, `streetAddress`.
+
+---
+
+### GET /me/photo/$value
+
+Returns the binary content of the signed-in user's profile photo.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/photo/$value
+```
+
+**Required permission:** `User.Read`
+
+<Tip>
+  To retrieve the photo metadata (size, content type) without downloading the binary, use `GET /me/photo` without `/$value`.
+</Tip>
+
+**Example usage in Graph Explorer:** The response is rendered as an image. In your application, read the binary stream and render it directly in an `<img>` tag or save it to disk.
+
+---
+
+### GET /me/memberOf
+
+Returns the list of groups, directory roles, and administrative units the signed-in user is a direct member of.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/memberOf
+```
+
+**Required permission:** `Directory.Read.All` or `GroupMember.Read.All`
+
+**Example response:**
+
+```json
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#directoryObjects",
+  "value": [
+    {
+      "@odata.type": "#microsoft.graph.group",
+      "id": "1274ccd4-7f1b-4bd6-8a63-2e9b9b1e3c58",
+      "displayName": "Finance Team",
+      "groupTypes": ["Unified"],
+      "mailEnabled": true,
+      "securityEnabled": false
+    },
+    {
+      "@odata.type": "#microsoft.graph.directoryRole",
+      "id": "b0e2f9e3-f3d7-4d8e-a3f2-1c4e57b93014",
+      "displayName": "Global Reader"
+    }
+  ]
+}
+```
+
+<Note>
+  This endpoint returns direct memberships only. To include nested group memberships, use `GET /me/transitiveMemberOf`.
+</Note>
+
+## Related resources
+
+<Columns cols={2}>
+  <Card title="Groups resource" icon="users" href="/api/resources/groups">
+    Explore group membership, owners, and group types in Microsoft Graph.
+  </Card>
+  <Card title="Authentication" icon="lock" href="/authentication">
+    Learn how to acquire tokens and configure scopes for Graph API access.
+  </Card>
+  <Card title="Common queries" icon="search" href="/api/common-queries">
+    Browse ready-to-run queries for users and other resources.
+  </Card>
+  <Card title="Error handling" icon="circle-alert" href="/api/error-handling">
+    Understand common error responses and how to handle them.
+  </Card>
+</Columns>

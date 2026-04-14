@@ -1,0 +1,286 @@
+---
+title: "Groups and membership endpoints — Microsoft Graph API"
+description: "Query Microsoft 365 groups, security groups, and distribution lists in Microsoft Graph. List members, owners, and check memberships using /groups endpoints."
+---
+
+The `/groups` resource in Microsoft Graph gives you access to all group types in your tenant — including Microsoft 365 groups, security groups, and distribution lists. You can list groups, inspect membership, and check ownership, all from Graph Explorer.
+
+<Info>
+  Microsoft Graph supports three primary group types: **Microsoft 365 groups** (collaboration-enabled, with mailbox, Teams, SharePoint), **Security groups** (for access control), and **Distribution lists** (email-only, no Microsoft 365 features).
+</Info>
+
+## Group types
+
+<AccordionGroup>
+  <Accordion title="Microsoft 365 groups">
+    Created with `"Unified"` in the `groupTypes` array. These groups have a shared mailbox, SharePoint site, Teams channel, and Planner board. They are `mailEnabled` and can be `securityEnabled`.
+  </Accordion>
+  <Accordion title="Security groups">
+    Used to manage access to resources. They are `securityEnabled: true` and `mailEnabled: false`. They do not appear in the `groupTypes` array.
+  </Accordion>
+  <Accordion title="Distribution lists">
+    Mail-enabled groups (`mailEnabled: true`) without the `"Unified"` group type. Used for email distribution only, with no collaboration features.
+  </Accordion>
+</AccordionGroup>
+
+## Endpoints
+
+### GET /groups
+
+Lists all groups in the tenant. Use `$filter` to narrow results by group type or property.
+
+```http
+GET https://graph.microsoft.com/v1.0/groups
+```
+
+**Required permission:** `Group.Read.All`
+
+<ParamField query="$select" type="string">
+  Comma-separated list of properties to include. Reduces response payload size.
+</ParamField>
+
+<ParamField query="$filter" type="string">
+  OData filter expression. Example: `$filter=groupTypes/any(c:c eq 'Unified')` to return only Microsoft 365 groups.
+</ParamField>
+
+<ParamField query="$top" type="number" default="100">
+  Maximum number of groups per page. Use `@odata.nextLink` to paginate.
+</ParamField>
+
+**Example response:**
+
+```json
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#groups",
+  "value": [
+    {
+      "id": "1274ccd4-7f1b-4bd6-8a63-2e9b9b1e3c58",
+      "displayName": "Finance Team",
+      "description": "All Finance department members",
+      "groupTypes": ["Unified"],
+      "mailEnabled": true,
+      "securityEnabled": false,
+      "mail": "financeteam@M365x214355.onmicrosoft.com"
+    },
+    {
+      "id": "a3f2c1d5-9b3a-4e6f-b2d1-7c8e4f1a2b3c",
+      "displayName": "IT Security",
+      "description": "Security access group for IT resources",
+      "groupTypes": [],
+      "mailEnabled": false,
+      "securityEnabled": true,
+      "mail": null
+    }
+  ]
+}
+```
+
+---
+
+### GET /groups/{id}
+
+Returns a specific group by its object ID.
+
+```http
+GET https://graph.microsoft.com/v1.0/groups/{id}
+```
+
+**Required permission:** `Group.Read.All`
+
+<ParamField path="id" type="string" required>
+  The group's object ID (GUID).
+</ParamField>
+
+**Example response:**
+
+```json
+{
+  "id": "1274ccd4-7f1b-4bd6-8a63-2e9b9b1e3c58",
+  "displayName": "Finance Team",
+  "description": "All Finance department members",
+  "groupTypes": ["Unified"],
+  "mailEnabled": true,
+  "securityEnabled": false,
+  "mail": "financeteam@M365x214355.onmicrosoft.com",
+  "createdDateTime": "2022-03-15T10:22:00Z",
+  "visibility": "Private"
+}
+```
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the group.
+</ResponseField>
+<ResponseField name="displayName" type="string">
+  The group's display name.
+</ResponseField>
+<ResponseField name="groupTypes" type="string[]">
+  Collection of group type identifiers. Contains `"Unified"` for Microsoft 365 groups; empty for security groups and distribution lists.
+</ResponseField>
+<ResponseField name="mailEnabled" type="boolean">
+  Whether the group has a mailbox associated with it.
+</ResponseField>
+<ResponseField name="securityEnabled" type="boolean">
+  Whether the group is used for security/access control purposes.
+</ResponseField>
+<ResponseField name="visibility" type="string">
+  Group visibility: `Public` or `Private`. Applies to Microsoft 365 groups.
+</ResponseField>
+
+---
+
+### GET /groups/{id}/members
+
+Returns the direct members of a group. Members can be users, service principals, or other groups.
+
+```http
+GET https://graph.microsoft.com/v1.0/groups/{id}/members
+```
+
+**Required permission:** `GroupMember.Read.All` or `Group.Read.All`
+
+<ParamField path="id" type="string" required>
+  The group's object ID.
+</ParamField>
+
+**Example response:**
+
+```json
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#directoryObjects",
+  "value": [
+    {
+      "@odata.type": "#microsoft.graph.user",
+      "id": "48d31887-5fad-4d73-a9f5-3c356e68a038",
+      "displayName": "Megan Bowen",
+      "mail": "MeganB@M365x214355.onmicrosoft.com",
+      "userPrincipalName": "MeganB@M365x214355.onmicrosoft.com"
+    },
+    {
+      "@odata.type": "#microsoft.graph.user",
+      "id": "e8a02cc7-face-4ae6-b3e9-c2b09f5d3f32",
+      "displayName": "Alex Wilber",
+      "mail": "AlexW@M365x214355.onmicrosoft.com",
+      "userPrincipalName": "AlexW@M365x214355.onmicrosoft.com"
+    }
+  ]
+}
+```
+
+<Tip>
+  To also retrieve nested group memberships (transitive members), use `GET /groups/{id}/transitiveMembers` instead.
+</Tip>
+
+---
+
+### GET /groups/{id}/owners
+
+Returns the owners of the group. Owners can manage the group's membership and settings.
+
+```http
+GET https://graph.microsoft.com/v1.0/groups/{id}/owners
+```
+
+**Required permission:** `Group.Read.All`
+
+<ParamField path="id" type="string" required>
+  The group's object ID.
+</ParamField>
+
+**Example response:**
+
+```json
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#directoryObjects",
+  "value": [
+    {
+      "@odata.type": "#microsoft.graph.user",
+      "id": "48d31887-5fad-4d73-a9f5-3c356e68a038",
+      "displayName": "Megan Bowen",
+      "mail": "MeganB@M365x214355.onmicrosoft.com"
+    }
+  ]
+}
+```
+
+---
+
+### GET /me/memberOf
+
+Returns the groups, directory roles, and administrative units the signed-in user is a **direct** member of.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/memberOf
+```
+
+**Required permission:** `GroupMember.Read.All` or `Directory.Read.All`
+
+**Example response:**
+
+```json
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#directoryObjects",
+  "value": [
+    {
+      "@odata.type": "#microsoft.graph.group",
+      "id": "1274ccd4-7f1b-4bd6-8a63-2e9b9b1e3c58",
+      "displayName": "Finance Team",
+      "groupTypes": ["Unified"],
+      "mailEnabled": true,
+      "securityEnabled": false
+    }
+  ]
+}
+```
+
+---
+
+### GET /me/transitiveMemberOf
+
+Returns all groups the signed-in user belongs to, including those inherited through nested group membership.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/transitiveMemberOf
+```
+
+**Required permission:** `GroupMember.Read.All` or `Directory.Read.All`
+
+<Note>
+  Use `transitiveMemberOf` when checking access entitlements — a user may have access through a nested group even if they are not a direct member of the top-level group.
+</Note>
+
+**Example response:**
+
+```json
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#directoryObjects",
+  "value": [
+    {
+      "@odata.type": "#microsoft.graph.group",
+      "id": "1274ccd4-7f1b-4bd6-8a63-2e9b9b1e3c58",
+      "displayName": "Finance Team"
+    },
+    {
+      "@odata.type": "#microsoft.graph.group",
+      "id": "a7c2f9e3-f3d7-4d8e-a3f2-9e1b57c93012",
+      "displayName": "All Company"
+    }
+  ]
+}
+```
+
+## Related resources
+
+<Columns cols={2}>
+  <Card title="Users resource" icon="user" href="/api/resources/users">
+    Read and update user profiles, photos, and memberships.
+  </Card>
+  <Card title="Permissions" icon="shield" href="/features/permissions">
+    Understand how to request and manage API permissions in Graph Explorer.
+  </Card>
+  <Card title="Common queries" icon="search" href="/api/common-queries">
+    Browse ready-to-run queries for groups and directory data.
+  </Card>
+  <Card title="Error handling" icon="circle-alert" href="/api/error-handling">
+    Handle permission errors and throttling responses.
+  </Card>
+</Columns>

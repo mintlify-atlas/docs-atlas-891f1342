@@ -1,0 +1,178 @@
+---
+title: "Query sovereign cloud tenants with Graph Explorer now"
+description: "Use Graph Explorer with US Government GCC, GCC High, DoD, and China clouds. Covers endpoint URLs, auth endpoints, and feature availability differences."
+---
+
+Sovereign clouds are isolated Microsoft Azure deployments that operate independently from the global Microsoft cloud. They exist to meet the compliance, data residency, and regulatory requirements of specific governments and regulated industries. Graph Explorer supports several sovereign cloud environments, letting you test Microsoft Graph API requests against the same isolated infrastructure your production applications use.
+
+## What are sovereign clouds
+
+Unlike the global Microsoft cloud, sovereign clouds run on physically separate infrastructure with dedicated data centers, authentication endpoints, and API base URLs. Data stored in a sovereign cloud never leaves that environment. This separation is essential for organizations subject to regulations such as FedRAMP High, ITAR, DFARS, and China's cybersecurity laws.
+
+Microsoft operates the following sovereign cloud environments relevant to Graph Explorer:
+
+<AccordionGroup>
+  <Accordion title="Microsoft Cloud for US Government (GCC)">
+    Designed for US federal, state, local, and tribal government agencies, and their solution providers. GCC tenants share infrastructure with the global cloud but enforce data handling commitments aligned with FedRAMP Moderate.
+  </Accordion>
+  <Accordion title="Microsoft Cloud for US Government (GCC High)">
+    A fully isolated environment for US Department of Defense contractors and agencies that must comply with FedRAMP High, ITAR, and DFARS. GCC High uses separate endpoints from the global cloud.
+  </Accordion>
+  <Accordion title="Microsoft Cloud for US Government (DoD)">
+    An environment dedicated exclusively to US Department of Defense tenants, meeting the most stringent government compliance requirements including IL4 and IL5.
+  </Accordion>
+  <Accordion title="Microsoft Cloud China (operated by 21Vianet)">
+    A separate cloud operated by Shanghai Blue Cloud Technology Co., Ltd. (a subsidiary of 21Vianet) under a licensing agreement with Microsoft. It is designed to comply with Chinese data residency regulations.
+  </Accordion>
+</AccordionGroup>
+
+## Endpoint base URLs by cloud
+
+Each sovereign cloud exposes the Microsoft Graph API at a different base URL. You must use the correct base URL for your tenant's cloud environment.
+
+| Cloud | Graph API base URL |
+|---|---|
+| Global (commercial) | `https://graph.microsoft.com` |
+| GCC | `https://graph.microsoft.com` |
+| GCC High | `https://graph.microsoft.us` |
+| DoD | `https://dod-graph.microsoft.us` |
+| China (21Vianet) | `https://microsoftgraph.chinacloudapi.cn` |
+
+<Note>
+  GCC uses the same `graph.microsoft.com` base URL as the global cloud. The isolation is at the tenant and authentication level, not the API host. GCC High and DoD use dedicated `*.microsoft.us` endpoints.
+</Note>
+
+## Authentication endpoints by cloud
+
+Authentication for sovereign clouds uses separate Microsoft identity platform endpoints. Configure your Azure app registration and token requests to point to the correct authority.
+
+<Tabs>
+  <Tab title="Global / GCC">
+    ```
+    Authority: https://login.microsoftonline.com/{tenant-id}
+    Token endpoint: https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token
+    ```
+  </Tab>
+  <Tab title="GCC High">
+    ```
+    Authority: https://login.microsoftonline.us/{tenant-id}
+    Token endpoint: https://login.microsoftonline.us/{tenant-id}/oauth2/v2.0/token
+    ```
+  </Tab>
+  <Tab title="DoD">
+    ```
+    Authority: https://login.microsoftonline.us/{tenant-id}
+    Token endpoint: https://login.microsoftonline.us/{tenant-id}/oauth2/v2.0/token
+    ```
+  </Tab>
+  <Tab title="China (21Vianet)">
+    ```
+    Authority: https://login.chinacloudapi.cn/{tenant-id}
+    Token endpoint: https://login.chinacloudapi.cn/{tenant-id}/oauth2/v2.0/token
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+  Tokens issued by one cloud's identity platform are not valid against another cloud's Graph API endpoint. A token from `login.microsoftonline.com` will be rejected by `graph.microsoft.us`. Always use the matching authority and Graph endpoint for your tenant's cloud.
+</Warning>
+
+## How to switch cloud environments in Graph Explorer
+
+Graph Explorer detects your cloud environment based on the base URL in the query bar. To target a sovereign cloud, update the base URL in your request to match the cloud's Graph API host.
+
+<Steps>
+  <Step title="Open Graph Explorer">
+    Navigate to [Graph Explorer](https://developer.microsoft.com/en-us/graph/graph-explorer) in your browser.
+  </Step>
+  <Step title="Sign in with a sovereign cloud account">
+    Click **Sign in to Graph Explorer**. Use the Microsoft account associated with your sovereign cloud tenant (for example, a `.mil` or `.gov` account for US Government clouds). Graph Explorer will authenticate against the correct authority based on your account's home tenant.
+  </Step>
+  <Step title="Update the request base URL">
+    In the query bar, replace `https://graph.microsoft.com` with the correct base URL for your cloud. For example, for GCC High:
+
+    ```
+    GET https://graph.microsoft.us/v1.0/me
+    ```
+
+    For DoD:
+
+    ```
+    GET https://dod-graph.microsoft.us/v1.0/me
+    ```
+
+    For China (21Vianet):
+
+    ```
+    GET https://microsoftgraph.chinacloudapi.cn/v1.0/me
+    ```
+  </Step>
+  <Step title="Run the query">
+    Click **Run query**. Graph Explorer sends the request to the sovereign cloud endpoint using the token obtained from your tenant's authentication authority.
+  </Step>
+</Steps>
+
+<Tip>
+  Sample queries in Graph Explorer default to the global `graph.microsoft.com` base URL. When working against a sovereign cloud, update the base URL in the query bar after selecting any sample query before running it.
+</Tip>
+
+## Limitations compared to the global cloud
+
+Sovereign cloud environments may not have feature parity with the global Microsoft cloud. When using Graph Explorer against a sovereign cloud, be aware of the following limitations:
+
+<AccordionGroup>
+  <Accordion title="API feature availability">
+    Some Microsoft Graph APIs and beta endpoints are available in the global cloud but have not yet been deployed to sovereign clouds. Features like Teams calling APIs, certain Planner capabilities, and newer Microsoft 365 services are often available in the global cloud first. Check the [Microsoft Graph national cloud deployments](https://learn.microsoft.com/en-us/graph/deployments) documentation for the current feature matrix.
+  </Accordion>
+  <Accordion title="Sample queries">
+    The built-in sample queries in Graph Explorer point to global cloud endpoints. You must manually update the base URL when running samples against sovereign clouds. There is no automatic URL rewriting.
+  </Accordion>
+  <Accordion title="Permissions and consent">
+    App registrations and permission grants are tenant-specific and do not transfer between cloud environments. An app registered in a GCC High Azure AD tenant cannot be used to authenticate against the global cloud, and vice versa.
+  </Accordion>
+  <Accordion title="SDK and tooling support">
+    Microsoft Graph SDKs support sovereign clouds but require explicit cloud configuration at initialization. The default SDK configuration targets the global cloud. Refer to the SDK documentation for your language to configure national cloud endpoints.
+  </Accordion>
+</AccordionGroup>
+
+## Example: Query users in a GCC High tenant
+
+The following request returns the signed-in user's profile from a GCC High tenant:
+
+```http
+GET https://graph.microsoft.us/v1.0/me
+Authorization: Bearer {access-token-from-gcc-high-tenant}
+```
+
+A successful response looks identical to the global cloud response:
+
+```json
+{
+  "@odata.context": "https://graph.microsoft.us/v1.0/$metadata#users/$entity",
+  "id": "48d31887-5fad-4d73-a9f5-3c356e68a038",
+  "displayName": "Megan Bowen",
+  "mail": "MeganB@contoso.us",
+  "userPrincipalName": "MeganB@contoso.us",
+  "jobTitle": "Auditor",
+  "officeLocation": "Washington, D.C."
+}
+```
+
+The key difference is the `@odata.context` URL, which reflects the sovereign cloud endpoint.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Authentication" icon="lock" href="/authentication">
+    Learn how Graph Explorer handles sign-in and token acquisition for different tenants.
+  </Card>
+  <Card title="API overview" icon="code" href="/api/overview">
+    Understand Graph API versioning, endpoints, and response formats.
+  </Card>
+</Columns>
+
+## References
+
+- [Microsoft Graph national cloud deployments](https://learn.microsoft.com/en-us/graph/deployments) — feature availability matrix across all clouds
+- [Microsoft identity platform and national clouds](https://learn.microsoft.com/en-us/azure/active-directory/develop/authentication-national-cloud) — authentication endpoints and configuration
+- [Microsoft 365 Government — GCC High and DoD](https://learn.microsoft.com/en-us/office365/servicedescriptions/office-365-platform-service-description/office-365-us-government/gcc-high-and-dod)

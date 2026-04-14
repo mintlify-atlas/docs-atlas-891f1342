@@ -1,0 +1,338 @@
+---
+title: "Mail messages and mailFolders — Microsoft Graph API"
+description: "Access, filter, and send email messages using the /me/messages and /me/mailFolders endpoints available in the Microsoft Graph API."
+---
+
+The mail endpoints in Microsoft Graph give you programmatic access to a user's inbox, sent items, and all mail folders. You can list and filter messages, retrieve individual emails, send new messages, and navigate folder hierarchies — all through the `/me/messages` and `/me/mailFolders` resources.
+
+<Info>
+  Mail endpoints use delegated permissions. The signed-in user can only access their own mailbox unless application permissions are granted by an administrator.
+</Info>
+
+## Permissions
+
+| Permission | Use |
+|---|---|
+| `Mail.Read` | Read messages and folders |
+| `Mail.ReadWrite` | Read, update, and delete messages |
+| `Mail.Send` | Send messages on behalf of the signed-in user |
+
+## Endpoints
+
+### GET /me/messages
+
+Lists messages in the user's mailbox. By default, returns messages from the inbox.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/messages
+```
+
+**Required permission:** `Mail.Read`
+
+<ParamField query="$select" type="string">
+  Return only specified message properties. Example: `$select=subject,from,receivedDateTime,isRead`
+</ParamField>
+
+<ParamField query="$filter" type="string">
+  Filter messages by property. Example: `$filter=isRead eq false`
+</ParamField>
+
+<ParamField query="$top" type="number" default="10">
+  Maximum number of messages to return. Use `@odata.nextLink` to page through results.
+</ParamField>
+
+<ParamField query="$orderby" type="string">
+  Sort messages by a property. Example: `$orderby=receivedDateTime desc`
+</ParamField>
+
+**Example response:**
+
+```json
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('me')/messages",
+  "value": [
+    {
+      "id": "AAMkAGI2ThkmTjc5LTYwMjctNDkwOS00ZjNjLTk5NTMtZDZmZTczYWJhNTVkABGAAAAAADUuTmgZ8xyRgWoJyaL",
+      "subject": "Welcome to the team!",
+      "isRead": false,
+      "receivedDateTime": "2024-06-10T08:23:00Z",
+      "from": {
+        "emailAddress": {
+          "name": "Adele Vance",
+          "address": "AdeleV@M365x214355.onmicrosoft.com"
+        }
+      },
+      "bodyPreview": "Hi Megan, welcome aboard! Looking forward to working with you."
+    }
+  ]
+}
+```
+
+---
+
+### GET /me/messages with $filter
+
+Retrieve only unread messages using an OData filter expression.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/messages?$filter=isRead eq false
+```
+
+**Required permission:** `Mail.Read`
+
+**Example response:**
+
+```json
+{
+  "value": [
+    {
+      "id": "AAMkAGI2ThkmTjc5LTYwMjctNDkw...",
+      "subject": "Action required: Review Q2 report",
+      "isRead": false,
+      "receivedDateTime": "2024-06-12T14:05:00Z",
+      "from": {
+        "emailAddress": {
+          "name": "Nestor Wilke",
+          "address": "NestorW@M365x214355.onmicrosoft.com"
+        }
+      }
+    }
+  ]
+}
+```
+
+<Tip>
+  You can combine filters using `and`. For example: `$filter=isRead eq false and importance eq 'high'`
+</Tip>
+
+---
+
+### GET /me/messages/{id}
+
+Retrieves a single message by its ID, including the full message body.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/messages/{id}
+```
+
+**Required permission:** `Mail.Read`
+
+<ParamField path="id" type="string" required>
+  The message's unique identifier. Obtain this from a list messages response.
+</ParamField>
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the message.
+</ResponseField>
+<ResponseField name="subject" type="string">
+  The message subject line.
+</ResponseField>
+<ResponseField name="body" type="object">
+  <Expandable title="properties">
+    <ResponseField name="contentType" type="string">
+      Either `text` or `html`.
+    </ResponseField>
+    <ResponseField name="content" type="string">
+      The full body content of the message.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+<ResponseField name="from" type="object">
+  The sender's email address and display name.
+</ResponseField>
+<ResponseField name="toRecipients" type="object[]">
+  List of primary recipients.
+</ResponseField>
+<ResponseField name="receivedDateTime" type="string">
+  ISO 8601 timestamp of when the message was received.
+</ResponseField>
+<ResponseField name="hasAttachments" type="boolean">
+  Whether the message has one or more attachments.
+</ResponseField>
+
+**Example response:**
+
+```json
+{
+  "id": "AAMkAGI2ThkmTjc5LTYwMjctNDkw...",
+  "subject": "Welcome to the team!",
+  "isRead": true,
+  "receivedDateTime": "2024-06-10T08:23:00Z",
+  "hasAttachments": false,
+  "body": {
+    "contentType": "html",
+    "content": "<html><body><p>Hi Megan, welcome aboard!</p></body></html>"
+  },
+  "from": {
+    "emailAddress": {
+      "name": "Adele Vance",
+      "address": "AdeleV@M365x214355.onmicrosoft.com"
+    }
+  },
+  "toRecipients": [
+    {
+      "emailAddress": {
+        "name": "Megan Bowen",
+        "address": "MeganB@M365x214355.onmicrosoft.com"
+      }
+    }
+  ]
+}
+```
+
+---
+
+### POST /me/sendMail
+
+Sends an email from the signed-in user's mailbox. The message is sent immediately and saved to the Sent Items folder.
+
+```http
+POST https://graph.microsoft.com/v1.0/me/sendMail
+```
+
+**Required permission:** `Mail.Send`
+
+**Request body:**
+
+```json
+{
+  "message": {
+    "subject": "Hello from Graph Explorer",
+    "body": {
+      "contentType": "Text",
+      "content": "Testing Microsoft Graph mail API."
+    },
+    "toRecipients": [
+      {
+        "emailAddress": {
+          "address": "recipient@example.com"
+        }
+      }
+    ]
+  }
+}
+```
+
+<Note>
+  A successful request returns `202 Accepted` with an empty response body. The message is queued for delivery.
+</Note>
+
+<Warning>
+  The `contentType` field is case-sensitive. Use `"Text"` or `"HTML"` — lowercase values will result in a `400 Bad Request` error.
+</Warning>
+
+You can optionally include CC and BCC recipients, attachments, and importance flags:
+
+```json
+{
+  "message": {
+    "subject": "Project update",
+    "body": {
+      "contentType": "HTML",
+      "content": "<p>Please see the attached update.</p>"
+    },
+    "toRecipients": [
+      { "emailAddress": { "address": "manager@example.com" } }
+    ],
+    "ccRecipients": [
+      { "emailAddress": { "address": "team@example.com" } }
+    ],
+    "importance": "High"
+  },
+  "saveToSentItems": true
+}
+```
+
+---
+
+### GET /me/mailFolders
+
+Lists all mail folders in the signed-in user's mailbox, including well-known folders like Inbox, Drafts, and Sent Items.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/mailFolders
+```
+
+**Required permission:** `Mail.Read`
+
+**Example response:**
+
+```json
+{
+  "value": [
+    {
+      "id": "AQMkAGI2ThkmTjc5LTYwMjctNDkw...",
+      "displayName": "Inbox",
+      "parentFolderId": "AQMkAGI2Thkm...",
+      "childFolderCount": 2,
+      "unreadItemCount": 5,
+      "totalItemCount": 142
+    },
+    {
+      "id": "AQMkAGI2ThkmTjc5ABC123...",
+      "displayName": "Sent Items",
+      "childFolderCount": 0,
+      "unreadItemCount": 0,
+      "totalItemCount": 87
+    }
+  ]
+}
+```
+
+---
+
+### GET /me/mailFolders/{id}/messages
+
+Retrieves messages within a specific mail folder. Use the folder's `id` from the `GET /me/mailFolders` response.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/mailFolders/{id}/messages
+```
+
+**Required permission:** `Mail.Read`
+
+<ParamField path="id" type="string" required>
+  The folder's object ID. You can also use well-known folder names: `inbox`, `drafts`, `sentitems`, `deleteditems`, `junkemail`.
+</ParamField>
+
+<Tip>
+  Well-known folder names are stable across accounts. For example, `GET /me/mailFolders/inbox/messages` always targets the user's inbox without needing to look up the folder ID first.
+</Tip>
+
+**Example response:**
+
+```json
+{
+  "value": [
+    {
+      "id": "AAMkAGI2ThkmTjc5LTYwMjctNDkw...",
+      "subject": "Draft: Budget proposal",
+      "isRead": true,
+      "receivedDateTime": "2024-06-11T09:00:00Z",
+      "from": {
+        "emailAddress": {
+          "name": "Megan Bowen",
+          "address": "MeganB@M365x214355.onmicrosoft.com"
+        }
+      }
+    }
+  ]
+}
+```
+
+## Related resources
+
+<Columns cols={2}>
+  <Card title="Calendar resource" icon="calendar" href="/api/resources/calendar">
+    Read and create calendar events using the Microsoft Graph events API.
+  </Card>
+  <Card title="Users resource" icon="user" href="/api/resources/users">
+    Access user profiles and contact information.
+  </Card>
+  <Card title="Permissions" icon="shield" href="/features/permissions">
+    Learn how to request Mail.Read, Mail.Send, and other scopes.
+  </Card>
+  <Card title="Error handling" icon="circle-alert" href="/api/error-handling">
+    Handle common mail API errors including quota and permission issues.
+  </Card>
+</Columns>

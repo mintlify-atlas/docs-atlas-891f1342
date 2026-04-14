@@ -1,0 +1,119 @@
+---
+title: "Choosing between v1.0 and beta Graph API endpoints"
+description: "Understand the difference between Microsoft Graph's stable v1.0 and preview beta endpoints, and when to use each in Graph Explorer."
+---
+
+Microsoft Graph exposes two API versions under the same base URL: `v1.0` and `beta`. The version you choose affects the stability of the features available to you, the SLAs that apply, and whether Microsoft recommends using the endpoint in a production application. Graph Explorer supports both versions and makes it easy to switch between them.
+
+## How the URLs differ
+
+The only structural difference between the two versions is the path segment after the base URL:
+
+```http
+https://graph.microsoft.com/v1.0/me
+https://graph.microsoft.com/beta/me
+```
+
+Both versions return JSON responses and accept the same OData query parameters. The difference lies in which features are available and how stable those features are.
+
+## v1.0 — stable and production-ready
+
+The v1.0 endpoint contains features that Microsoft has declared generally available (GA). These features are:
+
+- **Stable**: The API shape, response structure, and behavior will not change in breaking ways.
+- **SLA-backed**: Microsoft's service level agreements apply. You can rely on v1.0 for uptime guarantees in production workloads.
+- **Recommended for production**: Microsoft explicitly recommends v1.0 for any application used by real users or integrated into business workflows.
+
+<Tip>
+  If you are building an app that will be deployed to users, always use v1.0 unless you have a specific need for a feature that is only available in beta.
+</Tip>
+
+## beta — preview and subject to change
+
+The beta endpoint exposes features that are still in development or that Microsoft is gathering feedback on before promoting to v1.0. These features are:
+
+- **Unstable**: Properties, response shapes, and behaviors can change at any time, including in breaking ways.
+- **No SLA**: Microsoft does not provide production-level SLAs for the beta endpoint.
+- **Not recommended for production**: Microsoft explicitly advises against using beta in production applications.
+
+<Warning>
+  Do not rely on the beta endpoint for production applications. Beta APIs can be deprecated, renamed, or removed without the usual deprecation notice cycle that applies to v1.0.
+</Warning>
+
+## Feature availability differences
+
+Some capabilities are only available in beta because they haven't yet reached general availability. Common examples include:
+
+- Advanced identity and access management features
+- New Teams and communication APIs
+- Enhanced security and compliance signals
+- Newer properties on existing resources (such as additional fields on the `user` object)
+
+Once a feature graduates from beta to v1.0, the same endpoint path typically works in both versions (though not always — some features undergo changes during graduation). You can tell a feature has graduated when it appears in the [Microsoft Graph changelog](https://developer.microsoft.com/en-us/graph/changelog) with a "Generally available" status.
+
+## Comparing the two versions
+
+| | v1.0 | beta |
+|---|---|---|
+| Stability | GA, stable | Preview, subject to change |
+| SLA | Yes | No |
+| Production use | Recommended | Not recommended |
+| Feature coverage | Proven, broadly adopted features | Includes cutting-edge and experimental features |
+| Breaking changes | Versioned, announced in advance | Can occur without notice |
+
+## How to switch versions in Graph Explorer
+
+Graph Explorer includes a version selector directly in the query bar. When you change the version, it updates the URL prefix in the current query automatically.
+
+<Steps>
+  <Step title="Open the query bar">
+    At the top of Graph Explorer, locate the query bar that contains the HTTP method dropdown and the request URL.
+  </Step>
+  <Step title="Find the version selector">
+    To the left of the URL field, you'll see a dropdown that shows either **v1.0** or **beta**. Click it to open the version options.
+  </Step>
+  <Step title="Select a version">
+    Choose **v1.0** or **beta**. The URL in the request field updates immediately to reflect the selected version.
+  </Step>
+  <Step title="Run the query">
+    Click **Run query**. The response comes from the version you selected.
+  </Step>
+</Steps>
+
+<Note>
+  Switching versions in Graph Explorer only affects your current query. It does not persist across page reloads or affect other tabs.
+</Note>
+
+## Best practices
+
+<AccordionGroup>
+  <Accordion title="Use v1.0 for any deployed application">
+    Even if you prototype using beta, migrate to v1.0 before shipping to users. Relying on beta in production means a Graph API update could silently break your app.
+  </Accordion>
+  <Accordion title="Use beta to explore upcoming features">
+    Beta is ideal for experimentation in Graph Explorer. If you want to test a feature that hasn't graduated to v1.0 yet, beta lets you try it today. Just don't build a production dependency on it.
+  </Accordion>
+  <Accordion title="Monitor the Microsoft Graph changelog">
+    When a beta feature you depend on graduates to v1.0, update your queries to use the v1.0 endpoint. The [Microsoft Graph changelog](https://developer.microsoft.com/en-us/graph/changelog) lists GA promotions by date and category.
+  </Accordion>
+  <Accordion title="Watch for deprecation notices on v1.0">
+    v1.0 features can be deprecated, but Microsoft follows a structured deprecation process with advance notice and migration paths. Subscribe to the Microsoft 365 developer blog and the Graph changelog to stay informed.
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Microsoft Graph API overview" icon="book" href="/api/overview">
+    Learn about the base URL, authentication, and OData query parameters.
+  </Card>
+  <Card title="Common Graph API queries" icon="code" href="/api/common-queries">
+    Run example queries for users, mail, calendar, files, and groups.
+  </Card>
+  <Card title="Error handling" icon="triangle-exclamation" href="/api/error-handling">
+    Understand and fix errors returned by the Graph API.
+  </Card>
+  <Card title="Query editor" icon="terminal" href="/features/query-editor">
+    Learn how to use Graph Explorer's query bar, including the version selector.
+  </Card>
+</CardGroup>

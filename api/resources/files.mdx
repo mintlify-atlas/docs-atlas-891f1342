@@ -1,0 +1,358 @@
+---
+title: "OneDrive files and drive items — Microsoft Graph API"
+description: "Access OneDrive files and folders using /me/drive endpoints in Microsoft Graph. List, download, and search file content with Files.Read or Files.ReadWrite."
+---
+
+The `/me/drive` endpoints in Microsoft Graph provide access to the signed-in user's OneDrive. You can list files and folders, retrieve metadata for individual items, download file content, and search across the drive — all using standard HTTP requests through Graph Explorer.
+
+<Info>
+  OneDrive file operations use the Drive API, which maps to SharePoint document libraries as well as personal OneDrive accounts. The `/me/drive` path always refers to the signed-in user's default drive.
+</Info>
+
+## Permissions
+
+| Permission | Use |
+|---|---|
+| `Files.Read` | Read files and folders owned by the signed-in user |
+| `Files.ReadWrite` | Read, create, update, and delete files |
+| `Files.Read.All` | Read all files the user can access, including shared items |
+
+## Endpoints
+
+### GET /me/drive
+
+Returns metadata about the signed-in user's OneDrive, including storage quota and drive type.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/drive
+```
+
+**Required permission:** `Files.Read`
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for this drive.
+</ResponseField>
+<ResponseField name="driveType" type="string">
+  The type of drive. Values: `personal` (OneDrive personal), `business` (OneDrive for Business), `documentLibrary` (SharePoint).
+</ResponseField>
+<ResponseField name="owner" type="object">
+  The user or group that owns the drive.
+</ResponseField>
+<ResponseField name="quota" type="object">
+  <Expandable title="properties">
+    <ResponseField name="used" type="number">
+      Storage used in bytes.
+    </ResponseField>
+    <ResponseField name="remaining" type="number">
+      Storage remaining in bytes.
+    </ResponseField>
+    <ResponseField name="total" type="number">
+      Total storage allocated in bytes.
+    </ResponseField>
+    <ResponseField name="state" type="string">
+      Quota status: `normal`, `nearing`, `critical`, or `exceeded`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+**Example response:**
+
+```json
+{
+  "id": "b!dGhpcyBpcyBhIGZha2UgZHJpdmUgaWQ",
+  "driveType": "business",
+  "owner": {
+    "user": {
+      "displayName": "Megan Bowen",
+      "id": "48d31887-5fad-4d73-a9f5-3c356e68a038"
+    }
+  },
+  "quota": {
+    "used": 10737418240,
+    "remaining": 96636764160,
+    "total": 107374182400,
+    "state": "normal"
+  }
+}
+```
+
+---
+
+### GET /me/drive/root/children
+
+Lists the files and folders at the root of the user's OneDrive.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/drive/root/children
+```
+
+**Required permission:** `Files.Read`
+
+<ParamField query="$select" type="string">
+  Return only specified item properties. Example: `$select=id,name,size,webUrl`
+</ParamField>
+
+<ParamField query="$top" type="number">
+  Maximum number of items to return per page.
+</ParamField>
+
+**Example response:**
+
+```json
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('me')/drive/root/children",
+  "value": [
+    {
+      "id": "01BYE5RZ4NWDZSAATFJBFL3ORJB7NFTXQ7",
+      "name": "Documents",
+      "size": 45232,
+      "webUrl": "https://contoso-my.sharepoint.com/personal/meganb/Documents",
+      "folder": {
+        "childCount": 12
+      },
+      "createdDateTime": "2022-01-10T09:00:00Z",
+      "lastModifiedDateTime": "2024-05-22T15:30:00Z"
+    },
+    {
+      "id": "01BYE5RZ6NWDZSAATFJBFL3ORJB7NFTXQ8",
+      "name": "Q2 Report.xlsx",
+      "size": 238934,
+      "webUrl": "https://contoso-my.sharepoint.com/personal/meganb/Documents/Q2%20Report.xlsx",
+      "file": {
+        "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "hashes": {
+          "quickXorHash": "Uag5dAB1bQ4="
+        }
+      },
+      "createdDateTime": "2024-04-01T11:22:00Z",
+      "lastModifiedDateTime": "2024-06-05T08:45:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### GET /me/drive/items/{item-id}
+
+Returns metadata for a specific file or folder by its item ID.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/drive/items/{item-id}
+```
+
+**Required permission:** `Files.Read`
+
+<ParamField path="item-id" type="string" required>
+  The drive item's unique identifier. Obtain this from a list children response.
+</ParamField>
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the drive item.
+</ResponseField>
+<ResponseField name="name" type="string">
+  The file or folder name, including file extension.
+</ResponseField>
+<ResponseField name="size" type="number">
+  Size in bytes. For folders, this is the total size of all contained items.
+</ResponseField>
+<ResponseField name="webUrl" type="string">
+  URL to open the item in a browser.
+</ResponseField>
+<ResponseField name="file" type="object">
+  Present for files. Contains `mimeType` and `hashes`. Absent for folders.
+</ResponseField>
+<ResponseField name="folder" type="object">
+  Present for folders. Contains `childCount`. Absent for files.
+</ResponseField>
+<ResponseField name="createdDateTime" type="string">
+  ISO 8601 timestamp of when the item was created.
+</ResponseField>
+<ResponseField name="lastModifiedDateTime" type="string">
+  ISO 8601 timestamp of the last modification.
+</ResponseField>
+
+**Example response:**
+
+```json
+{
+  "id": "01BYE5RZ6NWDZSAATFJBFL3ORJB7NFTXQ8",
+  "name": "Q2 Report.xlsx",
+  "size": 238934,
+  "webUrl": "https://contoso-my.sharepoint.com/personal/meganb/Documents/Q2%20Report.xlsx",
+  "file": {
+    "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  },
+  "createdDateTime": "2024-04-01T11:22:00Z",
+  "lastModifiedDateTime": "2024-06-05T08:45:00Z",
+  "createdBy": {
+    "user": {
+      "displayName": "Megan Bowen",
+      "id": "48d31887-5fad-4d73-a9f5-3c356e68a038"
+    }
+  }
+}
+```
+
+---
+
+### GET /me/drive/items/{item-id}/children
+
+Lists the contents of a folder by its item ID.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/drive/items/{item-id}/children
+```
+
+**Required permission:** `Files.Read`
+
+<ParamField path="item-id" type="string" required>
+  The folder's item ID. Use `root` as the ID to list the root folder's contents.
+</ParamField>
+
+**Example response:**
+
+```json
+{
+  "value": [
+    {
+      "id": "01BYE5RZ7NWDZSAATFJBFL3ORJB7NFTXQ9",
+      "name": "Budget 2024.xlsx",
+      "size": 185440,
+      "file": { "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
+      "lastModifiedDateTime": "2024-03-15T10:00:00Z"
+    },
+    {
+      "id": "01BYE5RZ8NWDZSAATFJBFL3ORJB7NFTXQA",
+      "name": "Archive",
+      "folder": { "childCount": 5 },
+      "lastModifiedDateTime": "2023-12-01T08:30:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### GET /me/drive/items/{item-id}/content
+
+Downloads the binary content of a file. The response body is the raw file data.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/drive/items/{item-id}/content
+```
+
+**Required permission:** `Files.Read`
+
+<ParamField path="item-id" type="string" required>
+  The file's item ID.
+</ParamField>
+
+<Note>
+  This endpoint returns a `302 Found` redirect to a pre-authenticated download URL. Graph Explorer follows the redirect automatically. In your application, follow the redirect to download the file content.
+</Note>
+
+<Warning>
+  The download URL in the `Location` header is short-lived (typically a few minutes). Do not cache it for long-term use.
+</Warning>
+
+---
+
+### GET /me/drive/root/search(q='{search-text}')
+
+Searches for files and folders across the user's entire OneDrive by name or content.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/drive/root/search(q='{search-text}')
+```
+
+**Required permission:** `Files.Read`
+
+<ParamField path="search-text" type="string" required>
+  The search query string. Matches against file and folder names, and file content for supported formats (Office documents, PDFs).
+</ParamField>
+
+<Tip>
+  URL-encode the search text when constructing requests. For example, `search(q='Q2 report')` should be encoded as `search(q='Q2%20report')` in a URL.
+</Tip>
+
+**Example request:**
+
+```http
+GET https://graph.microsoft.com/v1.0/me/drive/root/search(q='budget')
+```
+
+**Example response:**
+
+```json
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#Collection(driveItem)",
+  "value": [
+    {
+      "id": "01BYE5RZ7NWDZSAATFJBFL3ORJB7NFTXQ9",
+      "name": "Budget 2024.xlsx",
+      "size": 185440,
+      "webUrl": "https://contoso-my.sharepoint.com/personal/meganb/Documents/Budget%202024.xlsx",
+      "file": {
+        "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      },
+      "lastModifiedDateTime": "2024-03-15T10:00:00Z"
+    },
+    {
+      "id": "01BYE5RZANWDZSAATFJBFL3ORJB7NFTXQB",
+      "name": "Budget overview.pptx",
+      "size": 3204821,
+      "file": {
+        "mimeType": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+      },
+      "lastModifiedDateTime": "2024-02-28T16:00:00Z"
+    }
+  ]
+}
+```
+
+## Key response fields reference
+
+<AccordionGroup>
+  <Accordion title="id">
+    A stable, unique identifier for the drive item. Use this to construct subsequent API calls for children, content, or metadata updates. The ID persists even if the file is renamed or moved.
+  </Accordion>
+  <Accordion title="name">
+    The file or folder name as it appears in OneDrive, including the file extension for files.
+  </Accordion>
+  <Accordion title="size">
+    Size in bytes. For folders, represents the aggregate size of all contained files recursively.
+  </Accordion>
+  <Accordion title="webUrl">
+    A shareable URL that opens the item in a browser using the appropriate Office web app or SharePoint viewer.
+  </Accordion>
+  <Accordion title="file">
+    Present only on file items. Contains `mimeType` for content type detection and `hashes` (including `quickXorHash` and `sha1Hash`) for integrity verification.
+  </Accordion>
+  <Accordion title="folder">
+    Present only on folder items. Contains `childCount` — the number of direct children in the folder.
+  </Accordion>
+  <Accordion title="createdDateTime">
+    ISO 8601 timestamp of when the item was originally created.
+  </Accordion>
+  <Accordion title="lastModifiedDateTime">
+    ISO 8601 timestamp of the most recent content or metadata change. Use this to detect updates when polling for changes.
+  </Accordion>
+</AccordionGroup>
+
+## Related resources
+
+<Columns cols={2}>
+  <Card title="Users resource" icon="user" href="/api/resources/users">
+    Access user profiles and drive ownership information.
+  </Card>
+  <Card title="API overview" icon="book" href="/api/overview">
+    Understand versioning, base URLs, and request structure.
+  </Card>
+  <Card title="Permissions" icon="shield" href="/features/permissions">
+    Learn how to request Files.Read and Files.ReadWrite scopes.
+  </Card>
+  <Card title="Sample queries" icon="play" href="/features/sample-queries">
+    Try pre-built OneDrive queries directly in Graph Explorer.
+  </Card>
+</Columns>

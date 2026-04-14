@@ -1,80 +1,69 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: "Make your first Microsoft Graph API call in minutes"
+description: "Run your first Microsoft Graph API query in Graph Explorer in under two minutes — no installation, account, or configuration required to begin."
 ---
 
-## Get started in three steps
+Graph Explorer requires no installation, no account, and no configuration. You can open it right now in your browser and start running Microsoft Graph API queries against sample data within seconds. This guide walks you through opening Graph Explorer, running your first query anonymously, signing in with your Microsoft account, and making an authenticated call to retrieve your own profile data.
 
-Get your documentation site running locally and make your first customization.
+<Steps>
+  <Step title="Open Graph Explorer">
+    Navigate to [https://developer.microsoft.com/en-us/graph/graph-explorer](https://developer.microsoft.com/en-us/graph/graph-explorer) in your browser.
 
-### Step 1: Set up your local environment
+    The interface loads with three main panels: the query bar at the top, the sample queries panel on the left, and the response viewer on the right. No sign-in is required at this point.
+  </Step>
+  <Step title="Run a query with the demo account">
+    The query bar is pre-filled with:
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+    ```text
+    GET https://graph.microsoft.com/v1.0/me
+    ```
 
-### Step 2: Deploy your changes
+    Click **Run query**. Graph Explorer sends the request using Microsoft's demo account and returns a sample profile response in the response viewer. The response body, HTTP status code, and response headers all appear on the right side of the screen.
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    <Note>
+      In demo mode, `/me` returns data for a fictional Microsoft user, not your own account. All responses in this mode reflect pre-populated sample data.
+    </Note>
+  </Step>
+  <Step title="Sign in with your Microsoft account">
+    To query your real data, click **Sign in to Graph Explorer** in the top-right corner of the page.
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+    A Microsoft authentication dialog appears. Enter the credentials for your Microsoft account — personal (outlook.com, hotmail.com), work, or school. After authenticating, your display name and profile photo appear in the header, confirming that Graph Explorer is now operating against your actual tenant.
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+    <Tip>
+      If you do not want to use your primary work account, you can create a free [Microsoft 365 Developer Program](https://developer.microsoft.com/en-us/microsoft-365/dev-program) tenant specifically for testing.
+    </Tip>
+  </Step>
+  <Step title="Run an authenticated query">
+    With the query bar still showing `GET https://graph.microsoft.com/v1.0/me`, click **Run query** again.
 
-### Step 3: Go live
+    This time Graph Explorer calls the real Graph API with your access token. The response body returns your actual Microsoft 365 profile data — including your display name, email address, job title, and user ID.
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+    If Graph Explorer prompts you to consent to the `User.Read` permission, click **Accept**. This grants Graph Explorer permission to read your profile on your behalf.
+  </Step>
+  <Step title="Explore sample queries">
+    Click the **Sample queries** tab in the left panel. The panel shows a categorized list of more than 100 pre-built queries covering users, mail, calendar, files, Teams, and more.
 
-## Next steps
+    Select any sample — for example, **Get my calendar events** under the Calendar category. Graph Explorer populates the query bar with the appropriate endpoint and HTTP method. Click **Run query** to execute it.
 
-Now that you have your docs running, explore these key features:
+    Each sample query also shows the permissions it requires. If you have not yet consented to those permissions, Graph Explorer prompts you to do so before the request succeeds.
+  </Step>
+</Steps>
+
+## What's next
+
+Now that you have made your first Graph API calls, explore the features that make Graph Explorer useful for day-to-day API development.
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Query editor" icon="terminal" href="/features/query-editor">
+    Learn how to set HTTP methods, customize headers, and include a request body for POST and PATCH operations.
+  </Card>
+  <Card title="Sample queries" icon="list" href="/features/sample-queries">
+    Discover the full library of ready-to-run queries and learn how to filter by workload or keyword.
+  </Card>
+  <Card title="Permissions" icon="shield-halved" href="/features/permissions">
+    Understand how Graph Explorer manages consent, view the scopes a query needs, and revoke permissions.
+  </Card>
+  <Card title="Authentication" icon="lock" href="/authentication">
+    Learn more about signed-in mode, demo account limitations, and how tokens work in Graph Explorer.
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

@@ -1,0 +1,160 @@
+---
+title: "Microsoft Graph API: base URL, auth, and OData params"
+description: "Learn what the Microsoft Graph API is, how it's structured, which API versions exist, how authentication works, and how to shape queries with OData."
+---
+
+Microsoft Graph is the unified REST API for Microsoft 365 services. It provides a single endpoint — `https://graph.microsoft.com` — that gives you access to data and intelligence across Microsoft 365, Azure Active Directory, and related services. Whether you're working with user profiles, email, calendar events, files, Teams conversations, or security signals, they all flow through the same API surface.
+
+## Base URL and versions
+
+Microsoft Graph exposes two API versions, both available under the same base URL:
+
+| Version | Base URL | Stability |
+|---------|----------|-----------|
+| v1.0 | `https://graph.microsoft.com/v1.0` | Stable, production-ready |
+| beta | `https://graph.microsoft.com/beta` | Preview, subject to change |
+
+<Note>
+  Use v1.0 for production applications. The beta endpoint exposes features that may change or be removed without notice. See [API versions: v1.0 vs beta endpoints](/api/beta-vs-v1) for details.
+</Note>
+
+## Authentication
+
+Microsoft Graph uses OAuth 2.0 with Azure Active Directory (Azure AD) as the authorization server. All requests must include a valid bearer token in the `Authorization` header.
+
+```http
+GET https://graph.microsoft.com/v1.0/me
+Authorization: Bearer {access_token}
+```
+
+In Graph Explorer, authentication is handled for you when you sign in with your Microsoft account. Graph Explorer requests the appropriate OAuth 2.0 scopes and attaches your access token to every request automatically.
+
+<Tip>
+  If a request returns a 401 or 403 error, check that you are signed in and have consented to the required permissions in the **Modify permissions** tab. See [Understand and fix Microsoft Graph API errors](/api/error-handling) for more.
+</Tip>
+
+## Key resource categories
+
+Microsoft Graph organizes its resources into several categories, all accessible through the same base URL:
+
+<CardGroup cols={2}>
+  <Card title="Users and groups" icon="users" href="/api/resources/users">
+    User profiles, group memberships, organizational structure, and directory objects.
+  </Card>
+  <Card title="Mail" icon="envelope" href="/api/resources/mail">
+    Read, send, and manage email messages, folders, and attachments.
+  </Card>
+  <Card title="Calendar" icon="calendar" href="/api/resources/calendar">
+    Events, meeting invites, free/busy availability, and calendar views.
+  </Card>
+  <Card title="Files (OneDrive)" icon="folder" href="/api/resources/files">
+    Drive items, file content, sharing, and permissions in OneDrive and SharePoint.
+  </Card>
+  <Card title="Teams" icon="comments" href="/features/sample-queries">
+    Channels, messages, meetings, and team membership — explore via sample queries.
+  </Card>
+  <Card title="Security and identity" icon="shield" href="/features/permissions">
+    Sign-in logs, alerts, identity protection — requires elevated admin permissions.
+  </Card>
+</CardGroup>
+
+## OData query parameters
+
+Microsoft Graph supports OData query parameters that let you control which data is returned and how it's shaped. You append these as query string parameters to your request URL.
+
+<AccordionGroup>
+  <Accordion title="$select — return only specific properties">
+    Limits the response to a specific set of properties. Use this to reduce payload size and avoid fetching data you don't need.
+
+    ```http
+    GET https://graph.microsoft.com/v1.0/me?$select=displayName,mail,jobTitle
+    ```
+  </Accordion>
+  <Accordion title="$filter — filter results by a condition">
+    Returns only resources that match a condition. Supports operators like `eq`, `ne`, `startsWith`, `contains`, and more.
+
+    ```http
+    GET https://graph.microsoft.com/v1.0/me/messages?$filter=isRead eq false
+    ```
+  </Accordion>
+  <Accordion title="$orderby — sort results">
+    Sorts results by one or more properties. Append `asc` or `desc` to control sort direction.
+
+    ```http
+    GET https://graph.microsoft.com/v1.0/me/messages?$orderby=receivedDateTime desc
+    ```
+  </Accordion>
+  <Accordion title="$expand — include related resources">
+    Expands a navigation property inline, so you receive the related resource in the same response instead of making a second request.
+
+    ```http
+    GET https://graph.microsoft.com/v1.0/me/messages?$expand=attachments
+    ```
+  </Accordion>
+  <Accordion title="$top and $skip — paginate results">
+    `$top` sets the maximum number of items to return. `$skip` skips a given number of items, useful for manual pagination.
+
+    ```http
+    GET https://graph.microsoft.com/v1.0/me/messages?$top=10&$skip=20
+    ```
+  </Accordion>
+  <Accordion title="$count — include a total item count">
+    Requests a count of matching resources alongside the results.
+
+    ```http
+    GET https://graph.microsoft.com/v1.0/me/messages?$count=true
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Response format
+
+All Microsoft Graph responses are JSON. Successful responses follow a consistent structure, and collection responses include OData annotations.
+
+**Single resource response:**
+
+```json
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users/$entity",
+  "id": "48d31887-5fad-4d73-a9f5-3c356e68a038",
+  "displayName": "Megan Bowen",
+  "mail": "MeganB@M365x214355.onmicrosoft.com",
+  "jobTitle": "Auditor"
+}
+```
+
+**Collection response:**
+
+```json
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users",
+  "@odata.count": 42,
+  "@odata.nextLink": "https://graph.microsoft.com/v1.0/users?$skiptoken=...",
+  "value": [
+    {
+      "id": "48d31887-5fad-4d73-a9f5-3c356e68a038",
+      "displayName": "Megan Bowen",
+      "mail": "MeganB@M365x214355.onmicrosoft.com"
+    }
+  ]
+}
+```
+
+The `@odata.nextLink` property appears when more results are available. Follow it to retrieve the next page of results. The `@odata.count` property is only present when you include `$count=true` in your request.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Common Graph API queries" icon="code" href="/api/common-queries">
+    Ready-to-run examples for users, mail, calendar, files, and groups.
+  </Card>
+  <Card title="API versions: v1.0 vs beta" icon="code-branch" href="/api/beta-vs-v1">
+    Understand when to use each version and how to switch in Graph Explorer.
+  </Card>
+  <Card title="Error handling" icon="triangle-exclamation" href="/api/error-handling">
+    Decode error responses and fix the most common Graph API errors.
+  </Card>
+  <Card title="Sample queries" icon="list" href="/features/sample-queries">
+    Browse 100+ built-in examples directly in Graph Explorer.
+  </Card>
+</CardGroup>

@@ -1,0 +1,155 @@
+---
+title: "Render and preview Adaptive Cards in Graph Explorer"
+description: "Learn how Graph Explorer automatically renders Adaptive Card JSON payloads as visual previews, so you can inspect rich card UI without leaving the browser."
+---
+
+Adaptive Cards is a cross-platform UI framework that represents rich, interactive content as JSON payloads. When a Microsoft Graph API response includes an Adaptive Card payload, Graph Explorer can render it visually — giving you an instant preview of the card exactly as it would appear in a Microsoft Teams message or notification.
+
+## What are Adaptive Cards
+
+Adaptive Cards describe UI elements — text blocks, images, action buttons, input fields — using a vendor-neutral JSON schema. The host application (Teams, Outlook, Windows, etc.) renders the card using its own native styles. This means the same JSON can produce a natively styled card in Teams, Outlook, or any other Adaptive Cards host.
+
+Microsoft Graph returns Adaptive Card payloads from several surfaces, including:
+
+- **Teams messaging extensions** — action-based and search-based extensions return cards as responses
+- **Teams activity feed notifications** — the `previewText` and `templateParameters` fields map to a card layout
+- **Connectors and webhooks** — Office 365 connectors use Adaptive Card JSON in their payloads
+
+<Info>
+  Adaptive Cards rendering in Graph Explorer is a read-only preview. You cannot interact with buttons or input fields in the preview pane.
+</Info>
+
+## Endpoints that return Adaptive Card payloads
+
+The following Graph API endpoints commonly return or accept Adaptive Card JSON:
+
+| Endpoint | Description |
+|---|---|
+| `POST /v1.0/teams/{team-id}/channels/{channel-id}/messages` | Send a message with an Adaptive Card attachment |
+| `POST /v1.0/chats/{chat-id}/messages` | Send a chat message with a card body |
+| `POST /v1.0/users/{user-id}/teamwork/sendActivityNotification` | Send an activity notification with a card preview |
+| `GET /v1.0/teams/{team-id}/installedApps` | Retrieve app definitions that include card schemas |
+
+## How Graph Explorer renders Adaptive Cards
+
+When Graph Explorer receives a JSON response that includes an Adaptive Card schema (identified by the `"type": "AdaptiveCard"` property), it detects the payload automatically and offers a visual preview in the **Response preview** tab.
+
+<Steps>
+  <Step title="Run a query that returns an Adaptive Card payload">
+    Construct and execute a request to an endpoint that returns card JSON, such as a Teams messaging extension response. The raw JSON appears in the **Response** tab.
+  </Step>
+  <Step title="Open the Response preview tab">
+    In the response pane, click the **Adaptive Cards** tab (or **Preview** tab, depending on your Graph Explorer version). Graph Explorer detects the `AdaptiveCard` schema and switches to the visual renderer.
+  </Step>
+  <Step title="Inspect the rendered card">
+    The card renders inline using the Adaptive Cards JavaScript SDK. You can see text, images, and layout exactly as they appear to end users in a Teams or Outlook client.
+  </Step>
+  <Step title="Switch back to raw JSON">
+    Click the **JSON** tab at any time to return to the raw response. Both views show the same response data.
+  </Step>
+</Steps>
+
+## Toggling between JSON and card preview
+
+The response pane in Graph Explorer provides two views when an Adaptive Card payload is detected:
+
+<Tabs>
+  <Tab title="JSON view">
+    Shows the raw API response body. Use this view to inspect field names, values, and the full structure of the card schema. This is the default view for all responses.
+
+    ```json
+    {
+      "body": {
+        "contentType": "html",
+        "content": "<attachment id=\"74d20c7f-0c1d-4507-8e6c-6f91d488e39d\"></attachment>"
+      },
+      "attachments": [
+        {
+          "id": "74d20c7f-0c1d-4507-8e6c-6f91d488e39d",
+          "contentType": "application/vnd.microsoft.card.adaptive",
+          "content": "{\"type\":\"AdaptiveCard\",\"body\":[...]}"
+        }
+      ]
+    }
+    ```
+  </Tab>
+  <Tab title="Adaptive Card preview">
+    Renders the card visually using the Adaptive Cards renderer. Graph Explorer extracts the `content` value from the attachment and passes it to the card host. Use this view to verify layout, text, and image rendering.
+  </Tab>
+</Tabs>
+
+## Example Adaptive Card JSON structure
+
+Below is a simplified Adaptive Card payload that Graph Explorer can render. This card displays a heading, a body paragraph, and two action buttons.
+
+```json
+{
+  "type": "AdaptiveCard",
+  "version": "1.4",
+  "body": [
+    {
+      "type": "TextBlock",
+      "size": "Medium",
+      "weight": "Bolder",
+      "text": "New approval request"
+    },
+    {
+      "type": "TextBlock",
+      "text": "John Smith has requested approval for Q3 budget report.",
+      "wrap": true
+    },
+    {
+      "type": "FactSet",
+      "facts": [
+        { "title": "Submitted by:", "value": "John Smith" },
+        { "title": "Due date:", "value": "2026-04-20" },
+        { "title": "Priority:", "value": "High" }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "Approve",
+      "style": "positive",
+      "data": { "action": "approve" }
+    },
+    {
+      "type": "Action.Submit",
+      "title": "Reject",
+      "style": "destructive",
+      "data": { "action": "reject" }
+    }
+  ],
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json"
+}
+```
+
+<Tip>
+  You can paste any valid Adaptive Card JSON directly into [https://adaptivecards.io/designer](https://adaptivecards.io/designer) to interactively edit and preview cards outside of Graph Explorer.
+</Tip>
+
+## Supported card schema versions
+
+Graph Explorer renders cards using the Adaptive Cards JavaScript SDK. The SDK supports card schema versions up to **1.5**. Cards using schema features from newer versions may render partially or fall back to plain JSON display.
+
+<Warning>
+  If the card schema version exceeds the renderer's supported version, Graph Explorer displays the raw JSON instead of the visual preview. Check the `"version"` field in your card payload if the preview does not appear.
+</Warning>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Response viewer" icon="eye" href="/features/response-viewer">
+    Learn more about all tabs and options in the Graph Explorer response pane.
+  </Card>
+  <Card title="Common queries" icon="code" href="/api/common-queries">
+    Find example requests for Teams, mail, and other Microsoft Graph resources.
+  </Card>
+</Columns>
+
+## References
+
+- [Adaptive Cards documentation](https://adaptivecards.io/documentation/) — schema reference, samples, and the interactive designer
+- [Microsoft Graph — Send message with Adaptive Card](https://learn.microsoft.com/en-us/microsoftteams/platform/task-modules-and-cards/cards/cards-reference#adaptive-card)
+- [Teams messaging extensions overview](https://learn.microsoft.com/en-us/microsoftteams/platform/messaging-extensions/what-are-messaging-extensions)

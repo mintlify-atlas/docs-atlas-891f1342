@@ -1,0 +1,390 @@
+---
+title: "Common Microsoft Graph API queries with response examples"
+description: "A curated set of frequently used Microsoft Graph API queries organized by category, with endpoints, descriptions, and example responses."
+---
+
+These are the Graph API queries developers run most often. Each entry shows the HTTP method and endpoint, what the request returns, and an example JSON response snippet. You can run any of these directly in Graph Explorer by pasting the URL into the query bar.
+
+## User profile
+
+Your own user profile is the most common starting point for Graph API exploration. The `/me` endpoint is shorthand for the signed-in user's object in Azure AD.
+
+### Get your full profile
+
+<Tabs>
+  <Tab title="Request">
+    ```http
+    GET https://graph.microsoft.com/v1.0/me
+    ```
+
+    Returns the complete profile of the signed-in user, including display name, email address, job title, office location, and more.
+  </Tab>
+  <Tab title="Response">
+    ```json
+    {
+      "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users/$entity",
+      "id": "48d31887-5fad-4d73-a9f5-3c356e68a038",
+      "displayName": "Megan Bowen",
+      "givenName": "Megan",
+      "surname": "Bowen",
+      "mail": "MeganB@M365x214355.onmicrosoft.com",
+      "jobTitle": "Auditor",
+      "officeLocation": "12/1110",
+      "userPrincipalName": "MeganB@M365x214355.onmicrosoft.com"
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Get selected profile properties
+
+<Tabs>
+  <Tab title="Request">
+    ```http
+    GET https://graph.microsoft.com/v1.0/me?$select=displayName,mail,jobTitle
+    ```
+
+    Uses the `$select` OData parameter to return only the specified properties. Useful for reducing payload size when you only need a few fields.
+  </Tab>
+  <Tab title="Response">
+    ```json
+    {
+      "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users(displayName,mail,jobTitle)/$entity",
+      "displayName": "Megan Bowen",
+      "mail": "MeganB@M365x214355.onmicrosoft.com",
+      "jobTitle": "Auditor"
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Mail
+
+Mail queries require the `Mail.Read` permission scope for reading messages, and `Mail.Send` for sending. Grant these in the **Modify permissions** tab in Graph Explorer.
+
+### List recent messages
+
+<Tabs>
+  <Tab title="Request">
+    ```http
+    GET https://graph.microsoft.com/v1.0/me/messages?$top=10
+    ```
+
+    Returns the 10 most recent messages in the signed-in user's mailbox. Add `$orderby=receivedDateTime desc` to ensure chronological order.
+  </Tab>
+  <Tab title="Response">
+    ```json
+    {
+      "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('48d31887')/messages",
+      "value": [
+        {
+          "id": "AAMkAGI2...",
+          "subject": "Team standup notes",
+          "receivedDateTime": "2024-11-14T09:30:00Z",
+          "from": {
+            "emailAddress": {
+              "name": "Alex Wilber",
+              "address": "AlexW@M365x214355.onmicrosoft.com"
+            }
+          },
+          "isRead": false,
+          "bodyPreview": "Here are the notes from today's standup..."
+        }
+      ]
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Send a message
+
+<Tabs>
+  <Tab title="Request">
+    ```http
+    POST https://graph.microsoft.com/v1.0/me/sendMail
+    ```
+
+    Sends an email on behalf of the signed-in user. The request body must be JSON with a `message` object and an optional `saveToSentItems` flag.
+
+    **Request body:**
+
+    ```json
+    {
+      "message": {
+        "subject": "Hello from Graph Explorer",
+        "body": {
+          "contentType": "Text",
+          "content": "This message was sent using the Microsoft Graph API."
+        },
+        "toRecipients": [
+          {
+            "emailAddress": {
+              "address": "AlexW@M365x214355.onmicrosoft.com"
+            }
+          }
+        ]
+      },
+      "saveToSentItems": true
+    }
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```http
+    HTTP/1.1 202 Accepted
+    ```
+
+    A successful `sendMail` request returns `202 Accepted` with no response body.
+  </Tab>
+</Tabs>
+
+<Note>
+  The `sendMail` endpoint requires the `Mail.Send` permission. Consent to it in the **Modify permissions** tab before running this query.
+</Note>
+
+---
+
+## Calendar
+
+Calendar queries require the `Calendars.Read` permission scope. Use `calendarView` when you need events within a specific time window.
+
+### List upcoming events
+
+<Tabs>
+  <Tab title="Request">
+    ```http
+    GET https://graph.microsoft.com/v1.0/me/events?$top=5
+    ```
+
+    Returns up to 5 events from the signed-in user's default calendar. Results are not guaranteed to be in chronological order unless you add `$orderby=start/dateTime asc`.
+  </Tab>
+  <Tab title="Response">
+    ```json
+    {
+      "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('48d31887')/events",
+      "value": [
+        {
+          "id": "AAMkAGI2...",
+          "subject": "Product review",
+          "start": {
+            "dateTime": "2024-11-18T14:00:00.0000000",
+            "timeZone": "UTC"
+          },
+          "end": {
+            "dateTime": "2024-11-18T15:00:00.0000000",
+            "timeZone": "UTC"
+          },
+          "isOnlineMeeting": true,
+          "organizer": {
+            "emailAddress": {
+              "name": "Megan Bowen",
+              "address": "MeganB@M365x214355.onmicrosoft.com"
+            }
+          }
+        }
+      ]
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Get events within a date range
+
+<Tabs>
+  <Tab title="Request">
+    ```http
+    GET https://graph.microsoft.com/v1.0/me/calendarView?startDateTime=2024-11-18T00:00:00Z&endDateTime=2024-11-25T00:00:00Z
+    ```
+
+    Returns all events that fall within the specified time window. Unlike `/events`, `calendarView` expands recurring events and is the recommended approach for building calendar views.
+  </Tab>
+  <Tab title="Response">
+    ```json
+    {
+      "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('48d31887')/calendarView",
+      "value": [
+        {
+          "id": "AAMkAGI2...",
+          "subject": "Weekly sync",
+          "start": {
+            "dateTime": "2024-11-18T10:00:00.0000000",
+            "timeZone": "UTC"
+          },
+          "end": {
+            "dateTime": "2024-11-18T10:30:00.0000000",
+            "timeZone": "UTC"
+          },
+          "type": "seriesMaster",
+          "recurrence": {
+            "pattern": {
+              "type": "weekly"
+            }
+          }
+        }
+      ]
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Files (OneDrive)
+
+File queries use the Drive API and require the `Files.Read` or `Files.ReadWrite` permission scope. All personal files and SharePoint document library files are accessible through this API.
+
+### List files in root
+
+<Tabs>
+  <Tab title="Request">
+    ```http
+    GET https://graph.microsoft.com/v1.0/me/drive/root/children
+    ```
+
+    Returns the files and folders at the root of the signed-in user's OneDrive. Each item includes metadata such as name, size, created/modified timestamps, and download URL.
+  </Tab>
+  <Tab title="Response">
+    ```json
+    {
+      "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#drives('b!...')/items",
+      "value": [
+        {
+          "id": "01BYE5RZ56Y2GOVW7725BZO354PWSELRRZ",
+          "name": "Documents",
+          "size": 2048576,
+          "lastModifiedDateTime": "2024-10-15T12:34:56Z",
+          "folder": {
+            "childCount": 12
+          },
+          "webUrl": "https://m365x214355-my.sharepoint.com/personal/meganb/Documents"
+        },
+        {
+          "id": "01BYE5RZ6SPQKR3LQSDRBZM5IOQBSEVMQ",
+          "name": "Presentation.pptx",
+          "size": 1024000,
+          "lastModifiedDateTime": "2024-11-01T08:20:00Z",
+          "file": {
+            "mimeType": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+          }
+        }
+      ]
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Get a specific file or folder
+
+<Tabs>
+  <Tab title="Request">
+    ```http
+    GET https://graph.microsoft.com/v1.0/me/drive/items/{item-id}
+    ```
+
+    Returns metadata for a specific drive item. Replace `{item-id}` with the item's ID, which you can get from a previous list request.
+  </Tab>
+  <Tab title="Response">
+    ```json
+    {
+      "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#drives('b!...')/items/$entity",
+      "id": "01BYE5RZ6SPQKR3LQSDRBZM5IOQBSEVMQ",
+      "name": "Presentation.pptx",
+      "size": 1024000,
+      "createdDateTime": "2024-09-10T14:00:00Z",
+      "lastModifiedDateTime": "2024-11-01T08:20:00Z",
+      "webUrl": "https://m365x214355-my.sharepoint.com/personal/meganb/_layouts/15/Doc.aspx?...",
+      "@microsoft.graph.downloadUrl": "https://public.dm.files.1drv.com/..."
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Groups
+
+Group queries require the `Group.Read.All` permission scope. The `/groups` endpoint returns Azure AD groups, including Microsoft 365 groups and security groups.
+
+### List all groups
+
+<Tabs>
+  <Tab title="Request">
+    ```http
+    GET https://graph.microsoft.com/v1.0/groups
+    ```
+
+    Returns all groups in the directory. This endpoint requires admin-level permissions and returns results for the entire tenant, not just the signed-in user's groups.
+  </Tab>
+  <Tab title="Response">
+    ```json
+    {
+      "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#groups",
+      "value": [
+        {
+          "id": "02bd9fd6-8f93-4758-87c3-1fb73740a315",
+          "displayName": "Sales and Marketing",
+          "description": "All employees in Sales and Marketing",
+          "mail": "salesandmarketing@M365x214355.onmicrosoft.com",
+          "groupTypes": ["Unified"],
+          "mailEnabled": true,
+          "securityEnabled": false
+        }
+      ]
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### List your group memberships
+
+<Tabs>
+  <Tab title="Request">
+    ```http
+    GET https://graph.microsoft.com/v1.0/me/memberOf
+    ```
+
+    Returns the groups, directory roles, and administrative units that the signed-in user belongs to. This is scoped to your own account, so it requires only `Directory.Read.All` rather than full group admin access.
+  </Tab>
+  <Tab title="Response">
+    ```json
+    {
+      "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#directoryObjects",
+      "value": [
+        {
+          "@odata.type": "#microsoft.graph.group",
+          "id": "02bd9fd6-8f93-4758-87c3-1fb73740a315",
+          "displayName": "Sales and Marketing",
+          "groupTypes": ["Unified"],
+          "mail": "salesandmarketing@M365x214355.onmicrosoft.com"
+        },
+        {
+          "@odata.type": "#microsoft.graph.directoryRole",
+          "id": "f28a1f50-f6e7-4571-818b-6a12f2af6b6c",
+          "displayName": "User Administrator",
+          "description": "Can manage all aspects of users and groups"
+        }
+      ]
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Microsoft Graph API overview" icon="book" href="/api/overview">
+    Learn about OData query parameters, response formats, and the full resource catalog.
+  </Card>
+  <Card title="API versions: v1.0 vs beta" icon="code-branch" href="/api/beta-vs-v1">
+    Understand the difference between the stable and preview API endpoints.
+  </Card>
+  <Card title="Error handling" icon="triangle-exclamation" href="/api/error-handling">
+    Fix 401, 403, 429, and other common Graph API errors.
+  </Card>
+  <Card title="Sample queries" icon="list" href="/features/sample-queries">
+    Explore 100+ ready-to-run examples built into Graph Explorer.
+  </Card>
+</CardGroup>

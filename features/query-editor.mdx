@@ -1,0 +1,178 @@
+---
+title: "Build and run queries in the Graph Explorer editor"
+description: "Use the Graph Explorer query editor to craft HTTP requests, set headers, add a request body, and run calls against any Microsoft Graph endpoint."
+---
+
+The query editor is the central workspace in Graph Explorer. It gives you a URL bar, an HTTP method selector, a request body editor, and a headers editor — everything you need to construct and execute a Microsoft Graph API call directly in your browser.
+
+## Query editor components
+
+The editor sits at the top of the Graph Explorer interface and consists of four main parts:
+
+<Columns cols={2}>
+  <Card title="HTTP method selector" icon="chevron-down">
+    Choose the HTTP verb for your request. Graph Explorer supports GET, POST, PATCH, PUT, and DELETE.
+  </Card>
+  <Card title="URL bar" icon="link">
+    Enter the full Graph API endpoint URL, including the version prefix (`v1.0` or `beta`).
+  </Card>
+  <Card title="Request body editor" icon="file-code">
+    Provide a JSON body for POST, PATCH, and PUT requests. The editor includes syntax highlighting and validation.
+  </Card>
+  <Card title="Request headers editor" icon="list">
+    Add custom HTTP request headers such as `Content-Type`, `Prefer`, or `ConsistencyLevel`.
+  </Card>
+</Columns>
+
+## Supported HTTP methods
+
+Graph Explorer supports all five HTTP methods used by Microsoft Graph:
+
+| Method | Typical use |
+|--------|-------------|
+| `GET` | Read resources — users, messages, events, files |
+| `POST` | Create a resource or trigger an action (e.g., send mail) |
+| `PATCH` | Update an existing resource with partial changes |
+| `PUT` | Replace an entire resource |
+| `DELETE` | Remove a resource |
+
+<Tip>
+  Most exploratory and read-only Graph API calls use GET. If you are unsure which method an endpoint requires, check the [Microsoft Graph API reference](https://learn.microsoft.com/graph/api/overview).
+</Tip>
+
+## Set the request URL
+
+The URL bar accepts any Microsoft Graph endpoint. All Graph URLs follow this format:
+
+```http
+https://graph.microsoft.com/{version}/{resource}
+```
+
+### Choosing between v1.0 and beta
+
+<Tabs>
+  <Tab title="v1.0">
+    Use `v1.0` endpoints for production-ready scenarios. These endpoints are stable and subject to Microsoft's API lifecycle commitments.
+
+    ```http
+    GET https://graph.microsoft.com/v1.0/me
+    ```
+  </Tab>
+  <Tab title="beta">
+    Use `beta` endpoints to preview newer capabilities. Beta endpoints may change without notice and are not supported for production use.
+
+    ```http
+    GET https://graph.microsoft.com/beta/me
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+  Beta endpoints are not covered by Microsoft's deprecation policy. Do not rely on them in production applications.
+</Warning>
+
+## Add a request body
+
+POST, PATCH, and PUT requests often require a JSON body. The request body editor appears below the URL bar when you select one of these methods.
+
+The following example sends an email from the signed-in user's mailbox:
+
+```json
+{
+  "message": {
+    "subject": "Hello from Graph Explorer",
+    "body": {
+      "contentType": "Text",
+      "content": "This message was sent using Graph Explorer."
+    },
+    "toRecipients": [
+      {
+        "emailAddress": {
+          "address": "recipient@example.com"
+        }
+      }
+    ]
+  },
+  "saveToSentItems": "true"
+}
+```
+
+This body is used with:
+
+```http
+POST https://graph.microsoft.com/v1.0/me/sendMail
+```
+
+<Note>
+  The request body editor validates JSON syntax as you type. A red underline indicates a formatting error. Fix all errors before running the query to avoid a `400 Bad Request` response.
+</Note>
+
+## Add custom request headers
+
+Some Graph API endpoints require or support custom headers. To add a header:
+
+<Steps>
+  <Step title="Open the Request headers tab">
+    Click the **Request headers** tab below the URL bar.
+  </Step>
+  <Step title="Enter the header name and value">
+    Type the header name in the **Key** field and the value in the **Value** field. For example:
+
+    | Key | Value |
+    |-----|-------|
+    | `Content-Type` | `application/json` |
+    | `Prefer` | `outlook.body-content-type="text"` |
+    | `ConsistencyLevel` | `eventual` |
+  </Step>
+  <Step title="Add additional headers">
+    Click **+ Add header** to add more key-value pairs. All headers you add are sent with the next query run.
+  </Step>
+</Steps>
+
+<Info>
+  Graph Explorer automatically adds the `Authorization` header with your bearer token when you are signed in. You do not need to add it manually.
+</Info>
+
+## Run the query
+
+Once your URL, method, body, and headers are set, click **Run query** to execute the request. The response appears in the response pane below.
+
+<Steps>
+  <Step title="Click Run query">
+    The **Run query** button is located to the right of the URL bar.
+  </Step>
+  <Step title="Review the response">
+    The response pane shows the HTTP status code, response time, and the JSON response body. See [Inspect API responses](/features/response-viewer) for details.
+  </Step>
+  <Step title="Iterate as needed">
+    Adjust your URL, body, or headers and click **Run query** again to test different inputs.
+  </Step>
+</Steps>
+
+## Keyboard shortcuts
+
+| Action | Shortcut |
+|--------|----------|
+| Run query | `Ctrl + Enter` (Windows/Linux) or `Cmd + Enter` (macOS) |
+| Format JSON in body editor | `Shift + Alt + F` (Windows/Linux) or `Shift + Option + F` (macOS) |
+
+<Tip>
+  Use `Ctrl + Enter` / `Cmd + Enter` to run queries without reaching for the mouse — especially useful when iterating quickly across multiple requests.
+</Tip>
+
+## Related pages
+
+<Columns cols={2}>
+  <Card title="Sample queries" icon="list" href="/features/sample-queries">
+    Load pre-built queries directly into the editor to get started quickly.
+  </Card>
+  <Card title="Inspect API responses" icon="magnifying-glass" href="/features/response-viewer">
+    Understand status codes, headers, and JSON response bodies.
+  </Card>
+  <Card title="Manage permissions" icon="shield-halved" href="/features/permissions">
+    Consent to the scopes your query requires before running it.
+  </Card>
+  <Card title="v1.0 vs beta" icon="code-branch" href="/api/beta-vs-v1">
+    Learn when to use stable vs preview Graph API endpoints.
+  </Card>
+</Columns>

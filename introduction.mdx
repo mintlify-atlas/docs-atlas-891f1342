@@ -1,0 +1,49 @@
+---
+title: "Graph Explorer: what it is and how it works for you"
+description: "Graph Explorer is Microsoft's browser-based tool for learning and testing the Microsoft Graph API without any local setup or app registration required."
+---
+
+Graph Explorer is a browser-based developer tool hosted at [developer.microsoft.com](https://developer.microsoft.com/en-us/graph/graph-explorer) that lets you build and execute HTTP requests against the Microsoft Graph API, inspect responses, manage permissions, and learn the API surface — all directly in your browser. You do not need to install anything, configure a development environment, or register an application to get started. Whether you are evaluating Graph for the first time or debugging a production integration, Graph Explorer gives you immediate, interactive access to the same endpoints your code will call.
+
+## Key capabilities
+
+<CardGroup cols={2}>
+  <Card title="Query editor" icon="terminal" href="/features/query-editor">
+    Compose GET, POST, PATCH, PUT, and DELETE requests to any Graph endpoint. Set headers, include request bodies, and run queries with a single click.
+  </Card>
+  <Card title="Sample queries" icon="list" href="/features/sample-queries">
+    Browse more than 100 pre-built queries across users, mail, calendar, files, Teams, and other workloads. Select any sample to load it instantly into the editor.
+  </Card>
+  <Card title="Response viewer" icon="eye" href="/features/response-viewer">
+    Inspect response bodies with syntax highlighting, view HTTP status codes and headers, and see how long each request took to complete.
+  </Card>
+  <Card title="Permissions management" icon="shield-halved" href="/features/permissions">
+    View the Microsoft Graph scopes that a query requires, grant consent for your account, and revoke permissions you no longer need.
+  </Card>
+  <Card title="Request history" icon="clock-rotate-left" href="/features/history">
+    Revisit every query you have run in the current session. Reload previous requests into the editor with one click.
+  </Card>
+  <Card title="Adaptive Cards" icon="credit-card" href="/advanced/adaptive-cards">
+    Preview Adaptive Card templates rendered against Graph response data to prototype cards for Teams and Outlook integrations.
+  </Card>
+</CardGroup>
+
+## How Graph Explorer fits into the Microsoft ecosystem
+
+Microsoft Graph is the unified REST API gateway for Microsoft 365, Azure Active Directory, and a growing set of Microsoft services including Teams, SharePoint, OneDrive, Outlook, Planner, and Intune. Rather than calling individual product APIs, developers use the single endpoint `https://graph.microsoft.com` to access data and functionality across all of those workloads.
+
+Graph Explorer sits at the entry point of that ecosystem. It is the fastest way to understand what an endpoint returns, what permissions it requires, and how the request must be structured before you write any code. Microsoft's official documentation at [learn.microsoft.com](https://learn.microsoft.com/en-us/graph/) links directly to Graph Explorer for many of its code samples, making it the standard tool for hands-on learning alongside the reference docs.
+
+Graph Explorer also integrates with Microsoft's [Postman collection for Microsoft Graph](/advanced/postman-collection), letting you export queries you build in the browser directly into Postman for use in automated workflows.
+
+## Demo account vs. signed-in mode
+
+Graph Explorer supports two modes of use:
+
+- **Demo account (anonymous):** When you open Graph Explorer without signing in, it connects to a read-only Microsoft-managed demo tenant. You can explore endpoints and inspect realistic sample responses without any credentials. This mode is intentionally limited — write operations are blocked and responses reflect demo data, not your organization's data.
+
+- **Signed-in mode:** When you sign in with a Microsoft account (personal, work, or school), Graph Explorer connects to your real Microsoft 365 tenant. You can read and write your actual data, consent to Graph API permissions interactively, and test queries that will behave exactly as they would in your application.
+
+<Note>
+  Signing in with a work or school account that belongs to an organization may require an administrator to grant consent for certain permissions. If a permission requires admin consent, Graph Explorer will indicate this and provide guidance on how to proceed.
+</Note>

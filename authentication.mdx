@@ -1,0 +1,126 @@
+---
+title: "Sign in and authenticate with Graph Explorer accounts"
+description: "Sign in to Graph Explorer with your Microsoft account to query real Microsoft 365 data, consent to scopes, and run authenticated Graph API calls."
+---
+
+By default, Graph Explorer operates with a Microsoft-managed demo account that gives you access to read-only sample data. Signing in with your own Microsoft account upgrades Graph Explorer to authenticated mode, where every query runs against your real Microsoft 365 tenant. This means you can read your actual emails, calendar events, and files, run write operations, and interact with the Graph API exactly as your application will. Authentication is handled entirely through Microsoft's standard OAuth 2.0 sign-in flow — Graph Explorer never stores your password.
+
+## Sign-in flow
+
+<Steps>
+  <Step title="Open Graph Explorer">
+    Navigate to [https://developer.microsoft.com/en-us/graph/graph-explorer](https://developer.microsoft.com/en-us/graph/graph-explorer). The page loads in demo (unauthenticated) mode by default.
+  </Step>
+  <Step title="Click Sign in">
+    Click **Sign in to Graph Explorer** in the top-right corner of the page. This opens the Microsoft authentication dialog in a popup or redirect, depending on your browser settings.
+  </Step>
+  <Step title="Enter your credentials">
+    Enter the email address and password for your Microsoft account. This can be:
+
+    - A personal Microsoft account (outlook.com, hotmail.com, live.com)
+    - A work or school account associated with a Microsoft 365 or Azure AD tenant
+
+    Complete any multi-factor authentication prompts your account requires.
+  </Step>
+  <Step title="Consent to Graph Explorer's base permissions">
+    The first time you sign in, Microsoft presents a consent screen asking you to grant Graph Explorer permission to sign you in and read your basic profile. Click **Accept** to proceed.
+
+    Graph Explorer requests only the minimum permissions needed to authenticate. You grant additional permissions on a per-query basis as you use the tool.
+  </Step>
+  <Step title="Confirm sign-in">
+    After signing in, your name and profile photo appear in the Graph Explorer header. The query bar and sample queries panel now operate against your tenant's data.
+  </Step>
+</Steps>
+
+## Demo account vs. signed-in comparison
+
+<Tabs>
+  <Tab title="Demo account">
+    The demo account is available to anyone without signing in. Graph Explorer uses a Microsoft-managed tenant with pre-populated sample data to respond to queries.
+
+    **What you can do:**
+    - Run GET queries against sample endpoints
+    - View realistic response shapes and field names
+    - Learn the Graph API structure without any credentials
+
+    **Limitations:**
+    - All data is fictional and pre-populated by Microsoft
+    - POST, PATCH, PUT, and DELETE operations are blocked
+    - You cannot consent to or test permission scopes
+    - Responses do not reflect real organizational data
+    - The demo tenant may not include data for every Graph workload
+
+    <Info>
+      The demo account is ideal for exploring Graph API response shapes and learning endpoint structure. Use signed-in mode for any integration development or testing that requires real data.
+    </Info>
+  </Tab>
+  <Tab title="Signed-in mode">
+    When you sign in with a Microsoft account, Graph Explorer connects to your real tenant and sends authenticated requests using your access token.
+
+    **What you can do:**
+    - Run GET, POST, PATCH, PUT, and DELETE operations
+    - Query your actual Microsoft 365 data (mail, calendar, files, profile, etc.)
+    - Consent to Graph API permission scopes interactively
+    - Test queries that mirror exactly how your application will behave
+    - Use the `/beta` endpoint for preview features
+
+    **Considerations:**
+    - Write operations affect your real data — use a developer tenant for destructive testing
+    - Some permissions require admin consent from your organization's Azure AD administrator
+    - Access tokens expire after a short period; Graph Explorer refreshes them automatically while you are active
+
+    <Warning>
+      POST, PATCH, PUT, and DELETE operations in signed-in mode make real changes to your Microsoft 365 data. If you are testing write operations, use a dedicated [Microsoft 365 Developer Program](https://developer.microsoft.com/en-us/microsoft-365/dev-program) tenant rather than your primary work account.
+    </Warning>
+  </Tab>
+</Tabs>
+
+## Tokens and session information
+
+When you sign in, Graph Explorer acquires an OAuth 2.0 access token from Microsoft's identity platform (Azure AD) on your behalf using the Authorization Code flow. This token is scoped to the Microsoft Graph resource (`https://graph.microsoft.com`) and includes the permissions you have consented to.
+
+You can inspect the access token that Graph Explorer is using at any time:
+
+1. Click the **Access token** tab in the request panel (next to **Request headers** and **Request body**).
+2. The full bearer token appears in the panel. You can copy it for use in other tools such as Postman or `curl`.
+
+Access tokens issued by Azure AD are valid for approximately one hour. Graph Explorer silently refreshes the token in the background while you are actively using the tool. If your session is idle for an extended period, you may need to sign in again.
+
+<Note>
+  Access tokens are sensitive credentials. Treat them like passwords — do not share them, commit them to source control, or log them in production systems. Tokens are tied to your account and the permissions you have consented to.
+</Note>
+
+## Consent and permissions
+
+Graph Explorer manages Microsoft Graph permissions on a per-request basis. When you run a query that requires a scope you have not yet granted, Graph Explorer shows a consent prompt listing the required permissions.
+
+To view and manage your current permissions:
+
+1. Open the **Modify permissions** tab in the left panel.
+2. The panel shows every permission currently consented for your session, along with the consent status (consented, not consented, or admin consent required).
+3. Click **Consent** next to any permission to grant it, or **Revoke** to remove it.
+
+For a detailed walkthrough of how permissions work and how to handle admin-required scopes, see the [Permissions](/features/permissions) page.
+
+## Common authentication questions
+
+<AccordionGroup>
+  <Accordion title="Can I use Graph Explorer with a personal Microsoft account?">
+    Yes. Personal Microsoft accounts (outlook.com, hotmail.com, live.com) work with Graph Explorer. However, personal accounts do not have access to Microsoft 365 workloads like SharePoint, Teams, or Exchange Online. Queries to those endpoints will return errors. For full Microsoft 365 access, use a work or school account or a developer tenant.
+  </Accordion>
+  <Accordion title="Does Graph Explorer store my credentials or data?">
+    No. Graph Explorer uses Microsoft's standard OAuth 2.0 flow, which means your password is never sent to or stored by Graph Explorer. Only an access token — scoped to the permissions you explicitly consent to — is held in memory for your session. Microsoft's privacy practices govern how the authentication service handles your account.
+  </Accordion>
+  <Accordion title="Why is my sign-in blocked or showing an error?">
+    Sign-in may fail if your organization's Azure AD conditional access policies restrict which applications users can grant consent to, or if your administrator has blocked non-admin consent for applications. Contact your Microsoft 365 administrator to determine whether Graph Explorer is permitted under your organization's policy. Alternatively, use a personal Microsoft account or a developer tenant where you have administrative control.
+  </Accordion>
+  <Accordion title="Can my organization's admin pre-authorize Graph Explorer?">
+    Yes. An Azure AD administrator can grant admin consent for Graph Explorer at the tenant level, which allows users in the organization to use the tool without individual consent prompts. The administrator grants consent through the Azure portal under **Enterprise applications** for the Graph Explorer application registration.
+  </Accordion>
+  <Accordion title="How do I sign out?">
+    Click your profile picture or display name in the Graph Explorer header and select **Sign out**. This clears your session and returns Graph Explorer to demo account mode. Your Microsoft account credentials are not affected — only the Graph Explorer session token is removed.
+  </Accordion>
+  <Accordion title="Can I switch between accounts without signing out?">
+    Yes. Sign out from the current session, then sign in again with a different Microsoft account. Each sign-in creates a new session with the permissions and data of that account. If you regularly switch between a personal account and a work account, consider using separate browser profiles to keep sessions isolated.
+  </Accordion>
+</AccordionGroup>

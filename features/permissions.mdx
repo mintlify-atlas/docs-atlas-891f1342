@@ -1,0 +1,190 @@
+---
+title: "Manage Microsoft Graph API permissions and OAuth scopes"
+description: "Understand how Graph Explorer surfaces required OAuth 2.0 scopes, how to consent or revoke them, and what happens when permissions are missing."
+---
+
+Microsoft Graph uses OAuth 2.0 permission scopes to control what data an application or user can access. Graph Explorer surfaces the exact scopes each query requires and lets you consent to them interactively — without leaving the browser.
+
+## What permissions (scopes) are
+
+Every Microsoft Graph API call is protected by one or more permission scopes. A scope defines what type of access is being requested — for example, the ability to read your email (`Mail.Read`) or send messages on your behalf (`Mail.Send`).
+
+There are two categories of permissions in Microsoft Graph:
+
+<Tabs>
+  <Tab title="Delegated permissions">
+    Delegated permissions allow Graph Explorer to act on behalf of the signed-in user. The access is limited to what the user themselves could do. Most queries in Graph Explorer use delegated permissions.
+
+    Example: `Mail.Read` lets the application read the signed-in user's mail — but not another user's mail.
+  </Tab>
+  <Tab title="Application permissions">
+    Application permissions allow an application to access data without a signed-in user. These require administrator consent and are not used in Graph Explorer's interactive mode.
+
+    <Info>
+      Graph Explorer operates with delegated permissions only. If you need to test application permissions, use tools like the [Postman collection](/advanced/postman-collection) with a client credentials flow.
+    </Info>
+  </Tab>
+</Tabs>
+
+## How Graph Explorer surfaces required permissions
+
+When you select or type a query URL, Graph Explorer automatically identifies the permission scopes the endpoint requires and displays them in the **Modify permissions** tab.
+
+For example, `GET https://graph.microsoft.com/v1.0/me/messages` requires:
+
+- `Mail.Read` — to read messages in the signed-in user's mailbox
+- `Mail.ReadBasic` — a lower-privilege alternative that reads only basic message properties
+
+Graph Explorer shows the full list so you can consent to the appropriate scope before running the query.
+
+## The Modify permissions tab
+
+The **Modify permissions** tab lives in the lower panel of Graph Explorer, next to the **Request headers** and **Request body** tabs.
+
+It shows a table with:
+
+| Column | Description |
+|--------|-------------|
+| **Permission** | The scope name, such as `User.Read` or `Calendars.ReadWrite` |
+| **Status** | Whether you have already consented to this scope |
+| **Admin consent required** | Whether a global administrator must grant the permission |
+
+<Note>
+  Some scopes require admin consent. If a scope shows **Admin consent required**, you either need to be a global administrator in your tenant, or have an admin pre-authorize the scope for your account.
+</Note>
+
+## How to consent to a permission
+
+<Steps>
+  <Step title="Open the Modify permissions tab">
+    Click the **Modify permissions** tab in the lower panel of Graph Explorer.
+  </Step>
+  <Step title="Review the listed scopes">
+    The tab displays all scopes relevant to the current query. Scopes you have already consented to are marked as **Consented**.
+  </Step>
+  <Step title="Consent to a scope">
+    Click **Consent** next to any scope you have not yet authorized. A Microsoft authentication popup appears.
+  </Step>
+  <Step title="Complete the consent flow">
+    Review the requested permissions in the popup and click **Accept**. Graph Explorer receives an updated access token that includes the new scope.
+  </Step>
+  <Step title="Run the query">
+    Return to the query editor and click **Run query**. The request now includes the necessary scopes in your token.
+  </Step>
+</Steps>
+
+<Tip>
+  You only need to consent to a scope once per session. Once consented, the scope remains active until your token expires or you sign out.
+</Tip>
+
+## How to revoke a permission
+
+To remove a scope you have previously consented to:
+
+<Steps>
+  <Step title="Open the Modify permissions tab">
+    Click **Modify permissions** in the lower panel.
+  </Step>
+  <Step title="Find the consented scope">
+    Locate the scope you want to revoke. It is marked as **Consented**.
+  </Step>
+  <Step title="Click Revoke">
+    Click **Revoke** next to the scope. Graph Explorer removes the scope from your active session token.
+  </Step>
+</Steps>
+
+<Warning>
+  Revoking a permission in Graph Explorer affects only your current Graph Explorer session. It does not permanently remove consent from your Microsoft account. To fully revoke an application's access, go to your [Microsoft account's app permissions page](https://myapps.microsoft.com) and remove Graph Explorer there.
+</Warning>
+
+## What happens when a required permission is missing
+
+If you run a query without the necessary scope, Microsoft Graph returns a `403 Forbidden` response.
+
+```json
+{
+  "error": {
+    "code": "Authorization_RequestDenied",
+    "message": "Insufficient privileges to complete the operation.",
+    "innerError": {
+      "date": "2024-01-15T10:23:41",
+      "request-id": "a2b3c4d5-e6f7-8901-abcd-ef1234567890"
+    }
+  }
+}
+```
+
+When you see this response:
+
+<Steps>
+  <Step title="Open the Modify permissions tab">
+    Check which scopes are required for the endpoint you are calling.
+  </Step>
+  <Step title="Consent to the missing scope">
+    Click **Consent** for any unconsented scope listed for the query.
+  </Step>
+  <Step title="Rerun the query">
+    After consenting, click **Run query** again. You should now receive a successful response.
+  </Step>
+</Steps>
+
+<Info>
+  If consenting and rerunning still returns `403`, the scope may require admin consent. Contact your Microsoft 365 administrator and ask them to pre-approve the scope for your account.
+</Info>
+
+## Common permission scopes
+
+<AccordionGroup>
+  <Accordion title="User permissions">
+    | Scope | What it allows |
+    |-------|----------------|
+    | `User.Read` | Read the signed-in user's profile |
+    | `User.ReadWrite` | Read and update the signed-in user's profile |
+    | `User.ReadBasic.All` | Read basic profile of all users in the directory |
+    | `User.Read.All` | Read the full profile of all users (admin consent required) |
+  </Accordion>
+  <Accordion title="Mail permissions">
+    | Scope | What it allows |
+    |-------|----------------|
+    | `Mail.Read` | Read the user's email messages |
+    | `Mail.ReadWrite` | Read and write the user's email messages |
+    | `Mail.Send` | Send mail as the user |
+  </Accordion>
+  <Accordion title="Calendar permissions">
+    | Scope | What it allows |
+    |-------|----------------|
+    | `Calendars.Read` | Read the user's calendars |
+    | `Calendars.ReadWrite` | Read and write the user's calendars |
+  </Accordion>
+  <Accordion title="Files permissions">
+    | Scope | What it allows |
+    |-------|----------------|
+    | `Files.Read` | Read the user's files |
+    | `Files.ReadWrite` | Read and write the user's files |
+    | `Files.ReadWrite.All` | Read and write all files the user can access |
+  </Accordion>
+  <Accordion title="Group permissions">
+    | Scope | What it allows |
+    |-------|----------------|
+    | `Group.Read.All` | Read all groups (admin consent required) |
+    | `Group.ReadWrite.All` | Read and write all groups (admin consent required) |
+    | `GroupMember.Read.All` | Read group memberships (admin consent required) |
+  </Accordion>
+</AccordionGroup>
+
+## Related pages
+
+<Columns cols={2}>
+  <Card title="Authentication" icon="lock" href="/authentication">
+    Sign in with your Microsoft account before managing permissions.
+  </Card>
+  <Card title="Inspect API responses" icon="magnifying-glass" href="/features/response-viewer">
+    Understand 403 and other status codes returned by the Graph API.
+  </Card>
+  <Card title="Error handling" icon="triangle-exclamation" href="/api/error-handling">
+    Learn how Microsoft Graph structures error responses.
+  </Card>
+  <Card title="Users resource" icon="user" href="/api/resources/users">
+    Explore Graph API endpoints for user data and required scopes.
+  </Card>
+</Columns>

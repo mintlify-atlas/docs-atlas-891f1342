@@ -1,97 +1,50 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Graph Explorer: Interactive Microsoft Graph API Tool"
+description: "Graph Explorer is Microsoft's browser-based API playground. Test Graph API calls, manage permissions, and learn endpoints directly in your browser."
 ---
 
-## Setting up
+Graph Explorer is Microsoft's browser-based API playground for the Microsoft Graph. Sign in with your Microsoft account and immediately start sending authenticated requests to Graph endpoints, inspecting responses, managing permissions, and building queries — all without writing a single line of code.
 
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Start making Graph API calls in minutes, with or without signing in.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Authentication" icon="lock" href="/authentication">
+    Sign in with your Microsoft account to access your own data.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Query Editor" icon="terminal" href="/features/query-editor">
+    Craft and execute Graph API requests with full HTTP method support.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Sample Queries" icon="list" href="/features/sample-queries">
+    Browse 100+ ready-to-run examples across users, mail, calendar, and more.
   </Card>
-</Columns>
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Understand Graph API endpoints, versioning, and response formats.
+  </Card>
+  <Card title="Permissions" icon="shield-halved" href="/features/permissions">
+    Understand and consent to the Microsoft Graph scopes your queries need.
+  </Card>
+</CardGroup>
 
-## Create beautiful pages
+## What you can do with Graph Explorer
 
-Everything you need to create world-class documentation.
+Graph Explorer gives you a fully interactive environment to work with Microsoft Graph — the unified API surface for Microsoft 365, Azure AD, and related services.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+<Steps>
+  <Step title="Open Graph Explorer">
+    Navigate to [Graph Explorer](https://developer.microsoft.com/en-us/graph/graph-explorer) in your browser. No installation or account required to try it with sample data.
+  </Step>
+  <Step title="Sign in (optional but recommended)">
+    Click **Sign in to Graph Explorer** to authenticate with your Microsoft account. This lets you query your real Microsoft 365 data and consent to permissions.
+  </Step>
+  <Step title="Run your first query">
+    The query bar is pre-filled with `GET https://graph.microsoft.com/v1.0/me`. Click **Run query** to fetch your profile information.
+  </Step>
+  <Step title="Explore more">
+    Browse the **Sample queries** panel to discover endpoints for mail, calendar, files, Teams, and much more. Select any sample to load it instantly.
+  </Step>
+</Steps>
 
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<Note>
+  Graph Explorer uses your real Microsoft 365 tenant data when you are signed in. You can also explore anonymously using Microsoft's built-in demo account, which provides read-only sample data.
+</Note>

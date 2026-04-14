@@ -1,0 +1,86 @@
+---
+title: "Track and replay your past API requests in Graph Explorer"
+description: "Graph Explorer automatically records every query you run so you can review past requests, replay them instantly, and pick up where you left off."
+---
+
+Graph Explorer keeps an automatic record of every query you execute during a session. The History tab gives you a chronological list of your past requests, so you can revisit previous calls, rerun them without re-entering the URL, and compare results across iterations.
+
+## What the history log records
+
+For each query you run, the history log stores:
+
+- The HTTP method (GET, POST, PATCH, PUT, DELETE)
+- The full request URL, including query parameters
+- The date and time the request was made
+- The HTTP status code returned by the API
+
+<Note>
+  The request body and custom headers from past requests are not stored in the history log. When you replay a request, you may need to re-enter the body or headers if the original call required them.
+</Note>
+
+## View your request history
+
+<Steps>
+  <Step title="Open the History tab">
+    Click the **History** tab in the left sidebar panel. The panel displays a list of your past requests, most recent first.
+  </Step>
+  <Step title="Review the log entries">
+    Each entry shows the HTTP method, endpoint URL, and the status code from the response. Entries are grouped by date to make it easier to find queries from earlier in your session.
+  </Step>
+  <Step title="Scroll to find older requests">
+    If you have run many queries, scroll down in the History panel to find earlier entries.
+  </Step>
+</Steps>
+
+## Replay a past request
+
+<Steps>
+  <Step title="Locate the entry in the History tab">
+    Find the request you want to replay by scrolling the history list or looking for its method and URL.
+  </Step>
+  <Step title="Click the entry">
+    Clicking a history entry loads the HTTP method and URL into the query editor, just as if you had typed them manually.
+  </Step>
+  <Step title="Review and run">
+    Verify the pre-filled URL is correct for what you want to test, then click **Run query** (or press `Ctrl + Enter` / `Cmd + Enter`) to execute it.
+  </Step>
+</Steps>
+
+<Tip>
+  Replaying history entries is useful when you are testing incremental changes — for example, running the same GET request after a POST or PATCH to confirm the update took effect.
+</Tip>
+
+## Clear history
+
+To remove all entries from the history log, click the **Clear** button (trash icon) at the top of the History panel. This action removes all recorded entries immediately.
+
+<Warning>
+  Clearing history is permanent within the current session. There is no undo. If you want to preserve a useful query, copy the URL before clearing, or add the query to your favorites if that feature is available in your version of Graph Explorer.
+</Warning>
+
+## Session persistence behavior
+
+Graph Explorer stores history in your browser's local storage. This means:
+
+- History **persists across page refreshes** within the same browser and profile.
+- History is **specific to the browser and device** you are using. Queries run in one browser are not visible in another.
+- History is **cleared when you clear your browser's local storage or site data** for the Graph Explorer domain.
+- History is **not tied to your Microsoft account**. Signing out and signing back in does not affect the history log.
+
+<Info>
+  Because history is stored locally in your browser, it is private to you and is not shared with Microsoft or other users.
+</Info>
+
+## Related pages
+
+<Columns cols={2}>
+  <Card title="Build and run queries" icon="terminal" href="/features/query-editor">
+    Learn how to construct and execute queries in the query editor.
+  </Card>
+  <Card title="Sample queries" icon="list" href="/features/sample-queries">
+    Browse pre-built queries to use as a starting point instead of typing from scratch.
+  </Card>
+  <Card title="Inspect API responses" icon="magnifying-glass" href="/features/response-viewer">
+    Understand how to read status codes, headers, and response bodies.
+  </Card>
+</Columns>

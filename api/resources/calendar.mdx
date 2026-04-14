@@ -1,0 +1,334 @@
+---
+title: "Calendar events and calendarView — Microsoft Graph API"
+description: "List, filter, and create calendar events using the /me/events and /me/calendarView endpoints in Microsoft Graph. Requires Calendars.Read or Calendars.ReadWrite."
+---
+
+The calendar endpoints in Microsoft Graph let you read and manage calendar events for the signed-in user. You can list upcoming events, query events within a date range, retrieve individual event details, and create new meetings with attendees — all through the `/me/events` and `/me/calendars` resources.
+
+<Info>
+  Calendar data is scoped to the signed-in user's primary calendar by default. To access shared or group calendars, use the `/users/{id}/calendars` or `/groups/{id}/calendar` paths.
+</Info>
+
+## Permissions
+
+| Permission | Use |
+|---|---|
+| `Calendars.Read` | Read calendar events |
+| `Calendars.ReadWrite` | Read, create, update, and delete events |
+
+## Endpoints
+
+### GET /me/events
+
+Lists all events from the signed-in user's primary calendar. Results include past and future events.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/events
+```
+
+**Required permission:** `Calendars.Read`
+
+<ParamField query="$select" type="string">
+  Return only specified event properties. Example: `$select=subject,start,end,organizer`
+</ParamField>
+
+<ParamField query="$filter" type="string">
+  Filter events by property values. Useful for narrowing by subject, organizer, or other fields. Note: use `calendarView` for date-range filtering.
+</ParamField>
+
+<ParamField query="$top" type="number" default="10">
+  Maximum number of events to return per page.
+</ParamField>
+
+<ParamField query="$orderby" type="string">
+  Sort events by a property. Example: `$orderby=start/dateTime asc`
+</ParamField>
+
+**Example response:**
+
+```json
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('me')/events",
+  "value": [
+    {
+      "id": "AAMkAGI2ThkmTjc5LTYwMjctNDkw...",
+      "subject": "Team sync",
+      "start": {
+        "dateTime": "2024-06-15T10:00:00.0000000",
+        "timeZone": "UTC"
+      },
+      "end": {
+        "dateTime": "2024-06-15T11:00:00.0000000",
+        "timeZone": "UTC"
+      },
+      "organizer": {
+        "emailAddress": {
+          "name": "Megan Bowen",
+          "address": "MeganB@M365x214355.onmicrosoft.com"
+        }
+      },
+      "isOnlineMeeting": true
+    }
+  ]
+}
+```
+
+---
+
+### GET /me/events sorted and limited
+
+Retrieve a specified number of upcoming events ordered by their start time.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/events?$top=10&$orderby=start/dateTime
+```
+
+**Required permission:** `Calendars.Read`
+
+<Note>
+  The `start/dateTime` sort path uses a forward slash to navigate into the nested `start` object's `dateTime` property. This syntax is specific to OData and does not work with all nested fields.
+</Note>
+
+---
+
+### GET /me/events/{id}
+
+Returns a single calendar event by its ID, including full details such as body, attendees, and recurrence rules.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/events/{id}
+```
+
+**Required permission:** `Calendars.Read`
+
+<ParamField path="id" type="string" required>
+  The event's unique identifier, obtained from a list events response.
+</ParamField>
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the event.
+</ResponseField>
+<ResponseField name="subject" type="string">
+  The event title.
+</ResponseField>
+<ResponseField name="start" type="object">
+  <Expandable title="properties">
+    <ResponseField name="dateTime" type="string">
+      ISO 8601 start date and time.
+    </ResponseField>
+    <ResponseField name="timeZone" type="string">
+      IANA time zone identifier (e.g., `"UTC"`, `"America/New_York"`).
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+<ResponseField name="end" type="object">
+  <Expandable title="properties">
+    <ResponseField name="dateTime" type="string">
+      ISO 8601 end date and time.
+    </ResponseField>
+    <ResponseField name="timeZone" type="string">
+      IANA time zone identifier.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+<ResponseField name="attendees" type="object[]">
+  List of attendees with their email address, name, and response status.
+</ResponseField>
+<ResponseField name="bodyPreview" type="string">
+  A plain-text preview of the event body.
+</ResponseField>
+<ResponseField name="isOnlineMeeting" type="boolean">
+  Whether the event has an online meeting link (e.g., Teams).
+</ResponseField>
+<ResponseField name="recurrence" type="object">
+  Recurrence pattern and range for recurring events. `null` for single-occurrence events.
+</ResponseField>
+
+---
+
+### GET /me/calendarView
+
+Returns events that occur within a specific date and time range. This is the recommended approach for date-based queries.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/calendarView?startDateTime={start}&endDateTime={end}
+```
+
+**Required permission:** `Calendars.Read`
+
+<ParamField query="startDateTime" type="string" required>
+  Start of the date range in ISO 8601 format. Example: `2024-06-01T00:00:00Z`
+</ParamField>
+
+<ParamField query="endDateTime" type="string" required>
+  End of the date range in ISO 8601 format. Example: `2024-06-30T23:59:59Z`
+</ParamField>
+
+<Warning>
+  Both `startDateTime` and `endDateTime` are required for `calendarView`. The request will return a `400 Bad Request` if either is missing.
+</Warning>
+
+**Example request:**
+
+```http
+GET https://graph.microsoft.com/v1.0/me/calendarView?startDateTime=2024-06-01T00:00:00Z&endDateTime=2024-06-30T23:59:59Z
+```
+
+**Example response:**
+
+```json
+{
+  "value": [
+    {
+      "id": "AAMkAGI2ThkmTjc5LTYwMjctNDkw...",
+      "subject": "Quarterly review",
+      "start": {
+        "dateTime": "2024-06-20T14:00:00.0000000",
+        "timeZone": "UTC"
+      },
+      "end": {
+        "dateTime": "2024-06-20T15:30:00.0000000",
+        "timeZone": "UTC"
+      }
+    }
+  ]
+}
+```
+
+<Tip>
+  `calendarView` expands recurring events into individual instances within the range, while `GET /me/events` returns the recurring series as a single event. Use `calendarView` when building a calendar UI.
+</Tip>
+
+---
+
+### GET /me/calendars
+
+Lists all calendars the signed-in user has access to, including their primary calendar and any subscribed or shared calendars.
+
+```http
+GET https://graph.microsoft.com/v1.0/me/calendars
+```
+
+**Required permission:** `Calendars.Read`
+
+**Example response:**
+
+```json
+{
+  "value": [
+    {
+      "id": "AQMkAGI2ThkmTjc5LTYwMjctNDkw...",
+      "name": "Calendar",
+      "color": "auto",
+      "isDefaultCalendar": true,
+      "canShare": true,
+      "canViewPrivateItems": true,
+      "owner": {
+        "name": "Megan Bowen",
+        "address": "MeganB@M365x214355.onmicrosoft.com"
+      }
+    },
+    {
+      "id": "AQMkAGI2ThkmTjc5LTYwMjctHoliday...",
+      "name": "United States holidays",
+      "color": "lightGreen",
+      "isDefaultCalendar": false,
+      "canShare": false
+    }
+  ]
+}
+```
+
+---
+
+### POST /me/events
+
+Creates a new calendar event in the signed-in user's primary calendar.
+
+```http
+POST https://graph.microsoft.com/v1.0/me/events
+```
+
+**Required permission:** `Calendars.ReadWrite`
+
+**Request body:**
+
+```json
+{
+  "subject": "Team sync",
+  "start": {
+    "dateTime": "2024-06-15T10:00:00",
+    "timeZone": "UTC"
+  },
+  "end": {
+    "dateTime": "2024-06-15T11:00:00",
+    "timeZone": "UTC"
+  },
+  "attendees": [
+    {
+      "emailAddress": { "address": "colleague@example.com" },
+      "type": "required"
+    }
+  ]
+}
+```
+
+<Note>
+  A successful request returns `201 Created` with the full event object in the response body, including the new event's `id`.
+</Note>
+
+The `attendees` object supports three types:
+
+| Type | Description |
+|---|---|
+| `required` | Attendee must respond. Appears as a required attendee in the meeting invite. |
+| `optional` | Attendee is invited but their attendance is optional. |
+| `resource` | A room or equipment resource being booked for the event. |
+
+You can also set an event body, location, and online meeting options:
+
+```json
+{
+  "subject": "Project kickoff",
+  "body": {
+    "contentType": "HTML",
+    "content": "<p>Please review the agenda before joining.</p>"
+  },
+  "start": {
+    "dateTime": "2024-07-01T09:00:00",
+    "timeZone": "America/New_York"
+  },
+  "end": {
+    "dateTime": "2024-07-01T10:00:00",
+    "timeZone": "America/New_York"
+  },
+  "location": {
+    "displayName": "Conference Room B"
+  },
+  "isOnlineMeeting": true,
+  "onlineMeetingProvider": "teamsForBusiness",
+  "attendees": [
+    {
+      "emailAddress": { "address": "alice@example.com", "name": "Alice" },
+      "type": "required"
+    }
+  ]
+}
+```
+
+## Related resources
+
+<Columns cols={2}>
+  <Card title="Mail resource" icon="envelope" href="/api/resources/mail">
+    Send and receive email using the Microsoft Graph mail API.
+  </Card>
+  <Card title="Users resource" icon="user" href="/api/resources/users">
+    Access user profiles and contact information.
+  </Card>
+  <Card title="Sample queries" icon="play" href="/features/sample-queries">
+    Try pre-built calendar queries directly in Graph Explorer.
+  </Card>
+  <Card title="Error handling" icon="circle-alert" href="/api/error-handling">
+    Understand common errors for calendar write operations.
+  </Card>
+</Columns>

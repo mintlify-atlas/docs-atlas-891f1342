@@ -1,0 +1,140 @@
+---
+title: "Export Graph Explorer queries to a Postman collection"
+description: "Export any Graph Explorer query as a Postman collection to run batch tests, automate workflows, and share requests with your team using OAuth 2.0."
+---
+
+Graph Explorer lets you export any query — including its HTTP method, URL, headers, request body, and authentication details — as a Postman collection. This gives you a fast path from exploring the Microsoft Graph API interactively to running automated tests, building pre-request scripts, and sharing reusable request libraries with your team.
+
+## What the export includes
+
+When you export a query from Graph Explorer, the resulting Postman collection file contains everything Postman needs to replay the request:
+
+<AccordionGroup>
+  <Accordion title="HTTP method and URL">
+    The full request URL, including the Graph API base (`https://graph.microsoft.com`), version path (`v1.0` or `beta`), and any resource path or query parameters you added in Graph Explorer.
+  </Accordion>
+  <Accordion title="Request headers">
+    Standard Graph API headers such as `Content-Type: application/json` and `ConsistencyLevel: eventual` are included when present. The `Authorization` header is exported as a Postman variable reference (`{{bearerToken}}`) rather than a hardcoded token.
+  </Accordion>
+  <Accordion title="Request body">
+    For `POST`, `PATCH`, and `PUT` requests, the JSON body you entered in Graph Explorer is included verbatim in the collection.
+  </Accordion>
+  <Accordion title="Authentication configuration">
+    The collection includes an OAuth 2.0 authorization definition scoped to the Microsoft identity platform token endpoint. You configure your own client ID and secret inside Postman after import.
+  </Accordion>
+</AccordionGroup>
+
+## How to export a query from Graph Explorer
+
+<Steps>
+  <Step title="Build and run your query">
+    Open [Graph Explorer](https://developer.microsoft.com/en-us/graph/graph-explorer) and construct the request you want to export. Select the HTTP method, enter the endpoint URL, and add a request body if needed. Run the query to confirm it works as expected.
+  </Step>
+  <Step title="Open the share options">
+    Click the **Share** icon (or the **...** overflow menu) near the query bar. A panel appears with options to copy a link or export the query.
+  </Step>
+  <Step title="Select Export to Postman">
+    Choose **Export to Postman** (or **Download Postman collection**, depending on your Graph Explorer version). Graph Explorer generates a `.json` file conforming to the Postman Collection v2.1 schema and downloads it to your machine.
+  </Step>
+  <Step title="Import into Postman">
+    In Postman, click **Import**, then drag the downloaded `.json` file into the import dialog (or browse to the file). Postman imports the collection and displays it in your sidebar.
+  </Step>
+  <Step title="Configure authentication">
+    Open the imported collection, go to **Authorization**, and set the type to **OAuth 2.0**. Fill in your Azure app registration's **Client ID**, **Client Secret**, and **Scope**. Click **Get New Access Token** to retrieve a token and attach it to subsequent requests.
+  </Step>
+</Steps>
+
+<Note>
+  The exported collection does not contain your personal access token. Tokens are short-lived and account-specific — you must configure authentication separately inside Postman using your own app registration credentials.
+</Note>
+
+## Importing the collection into Postman
+
+Once you have the exported `.json` file, you have two import paths:
+
+<Tabs>
+  <Tab title="Import via file">
+    1. Open Postman and click **Import** in the top-left corner.
+    2. Select **File** and browse to the exported `.json` file.
+    3. Postman previews the collection. Click **Import** to confirm.
+    4. The collection appears under **Collections** in the sidebar.
+  </Tab>
+  <Tab title="Import via URL (shared link)">
+    If you used Graph Explorer's **Copy link** feature to generate a shareable URL, you can paste that URL directly into Postman's **Link** import field. Postman fetches the collection definition from the URL and imports it in the same way as a local file.
+  </Tab>
+</Tabs>
+
+## Authenticating in Postman for Microsoft Graph
+
+Microsoft Graph requires a valid OAuth 2.0 bearer token issued by the Microsoft identity platform. After importing your collection, configure authentication at the collection level so all requests inherit it.
+
+```
+Token endpoint: https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token
+Authorization URL: https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/authorize
+Scope: https://graph.microsoft.com/.default
+```
+
+Replace `{tenant-id}` with your Azure AD tenant ID, or use `common` for multi-tenant applications.
+
+<Tip>
+  Set the token as a **collection-level variable** named `bearerToken`. All requests in the collection reference `{{bearerToken}}` in their `Authorization` header, so you only need to update it in one place when the token expires.
+</Tip>
+
+A minimal Postman pre-request script to fetch a client credentials token looks like this:
+
+```javascript
+const tokenUrl = `https://login.microsoftonline.com/${pm.environment.get("tenantId")}/oauth2/v2.0/token`;
+
+const requestBody = {
+  grant_type: "client_credentials",
+  client_id: pm.environment.get("clientId"),
+  client_secret: pm.environment.get("clientSecret"),
+  scope: "https://graph.microsoft.com/.default"
+};
+
+pm.sendRequest(
+  {
+    url: tokenUrl,
+    method: "POST",
+    header: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: { mode: "urlencoded", urlencoded: requestBody }
+  },
+  (err, res) => {
+    pm.collectionVariables.set("bearerToken", res.json().access_token);
+  }
+);
+```
+
+<Warning>
+  Never commit client secrets or access tokens to version control. Store them as Postman environment variables marked as **secret** so they are masked in the UI and excluded from collection exports.
+</Warning>
+
+## Benefits of using Postman alongside Graph Explorer
+
+Graph Explorer is optimized for discovery and learning. Postman adds capabilities that complement it for development and testing workflows:
+
+<Columns cols={2}>
+  <Card title="Batch testing" icon="list-check">
+    Chain multiple Graph API requests in a Postman collection run. Use test scripts to assert response status codes, validate fields, and fail fast when the API behaves unexpectedly.
+  </Card>
+  <Card title="Pre-request scripting" icon="code">
+    Write JavaScript to dynamically compute request parameters — such as extracting an object ID from a previous response and injecting it into the next request URL.
+  </Card>
+  <Card title="Team sharing" icon="users">
+    Publish collections to a Postman workspace so your entire team has access to a standard set of Graph API requests. Changes sync automatically across team members.
+  </Card>
+  <Card title="Environment management" icon="sliders">
+    Define environment variables for tenant ID, client ID, and endpoint base URL. Switch between development and production tenants without editing individual requests.
+  </Card>
+</Columns>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Query editor" icon="terminal" href="/features/query-editor">
+    Master request construction in Graph Explorer before exporting to Postman.
+  </Card>
+  <Card title="Authentication" icon="lock" href="/authentication">
+    Understand how Graph Explorer handles sign-in and permissions before configuring Postman auth.
+  </Card>
+</Columns>
